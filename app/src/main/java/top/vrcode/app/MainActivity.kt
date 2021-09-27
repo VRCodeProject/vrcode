@@ -1,24 +1,111 @@
-package top.vrcode.app;
+package top.vrcode.app
 
-import android.app.Activity;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.os.Build;
-import android.preference.PreferenceManager;
-import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.KeyEvent;
-import android.view.PointerIcon;
-import android.view.SurfaceView;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.FrameLayout;
+import androidx.appcompat.app.AppCompatActivity
+import top.vrcode.app.AdditionalKeyboardView
+import android.widget.FrameLayout
+import android.os.Bundle
+import android.content.res.Configuration
+import android.preference.PreferenceManager
+import android.view.*
+import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import com.termux.shared.termux.TermuxUtils
 
-public class MainActivity extends AppCompatActivity {
+class MainActivity : AppCompatActivity() {
+    @JvmField
+    var kbd: AdditionalKeyboardView? = null
+    private var frm: FrameLayout? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val err = TermuxUtils.isTermuxAppAccessible(applicationContext)
 
-    private static int[] keys = {
+        if (err != null) {
+            Toast.makeText(this, err, Toast.LENGTH_LONG).apply {
+                setGravity(Gravity.CENTER, 0, 0)
+            }.show()
+            finish()
+        }
+
+        super.onCreate(savedInstanceState)
+        LorieService.setMainActivity(this)
+        LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+        )
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        setContentView(R.layout.main_activity)
+        kbd = findViewById(R.id.additionalKbd)
+        frm = findViewById(R.id.frame)
+        window.decorView.pointerIcon =
+            PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
+    }
+
+    var orientation = 0
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig.orientation != orientation && kbd != null && kbd!!.visibility == View.VISIBLE) {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            var view = currentFocus
+            if (view == null) {
+                view = View(this)
+            }
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+        orientation = newConfig.orientation
+    }
+
+    fun onLorieServiceStart(instance: LorieService) {
+        val lorieView = findViewById<SurfaceView>(R.id.lorieView)
+        instance.setListeners(lorieView)
+        kbd!!.reload(keys, lorieView, LorieService.getOnKeyListener())
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val window = window
+        val decorView = window.decorView
+        if (preferences.getBoolean("Reseed", true)) {
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        } else {
+            window.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or
+                        WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+            )
+        }
+    }
+
+    override fun onBackPressed() {}
+//    public override fun onUserLeaveHint() {
+//        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+//        if (preferences.getBoolean("PIP", true)) {
+//            enterPictureInPictureMode()
+//        }
+//    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        if (kbd!!.visibility != View.VISIBLE) if (preferences.getBoolean(
+                "showAdditionalKbd",
+                true
+            )
+        ) {
+            kbd!!.visibility = View.VISIBLE
+            val paddingDp = 35
+            val density = this.resources.displayMetrics.density
+            val paddingPixel = (paddingDp * density).toInt()
+            frm!!.setPadding(0, 0, 0, paddingPixel)
+        }
+        return
+
+    }
+
+    companion object {
+        private val keys = intArrayOf(
             KeyEvent.KEYCODE_ESCAPE,
             KeyEvent.KEYCODE_TAB,
             KeyEvent.KEYCODE_CTRL_LEFT,
@@ -26,106 +113,7 @@ public class MainActivity extends AppCompatActivity {
             KeyEvent.KEYCODE_DPAD_UP,
             KeyEvent.KEYCODE_DPAD_DOWN,
             KeyEvent.KEYCODE_DPAD_LEFT,
-            KeyEvent.KEYCODE_DPAD_RIGHT,
-    };
-
-    AdditionalKeyboardView kbd;
-    FrameLayout frm;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        LorieService.setMainActivity(this);
-        LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY);
-
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN|
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.main_activity);
-
-        kbd = findViewById(R.id.additionalKbd);
-	frm = findViewById(R.id.frame);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            getWindow().
-             getDecorView().
-              setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
-	}
-
-    int orientation;
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        if (newConfig.orientation != orientation && kbd != null && kbd.getVisibility() == View.VISIBLE) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
-            View view = getCurrentFocus();
-            if (view == null) {
-                view = new View(this);
-            }
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-
-        orientation = newConfig.orientation;
+            KeyEvent.KEYCODE_DPAD_RIGHT
+        )
     }
-
-    public void onLorieServiceStart(LorieService instance) {
-        SurfaceView lorieView = findViewById(R.id.lorieView);
-
-        instance.setListeners(lorieView);
-        kbd.reload(keys, lorieView, LorieService.getOnKeyListener());
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus)
-    {
-        super.onWindowFocusChanged(hasFocus);
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        Window window = getWindow();
-        View decorView = window.getDecorView();
-
-	if (preferences.getBoolean("Reseed", true))
-	{
-	    window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-	} else {
-	    window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN|
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-	}
-    }
-
-    @Override
-    public void onBackPressed() {}
-
-    @Override
-    public void onUserLeaveHint () {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-	if (preferences.getBoolean("PIP", true)) {
-            enterPictureInPictureMode();
-	}
-    }
-
-    @Override
-    public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-	if (isInPictureInPictureMode) {
-	    if (kbd.getVisibility() != View.GONE)
-                kbd.setVisibility(View.GONE);
-		frm.setPadding(0,0,0,0);
-	    return;
-	} else {
-	    if (kbd.getVisibility() != View.VISIBLE)
-		if (preferences.getBoolean("showAdditionalKbd", true)) {
-                    kbd.setVisibility(View.VISIBLE);
-		    int paddingDp = 35;
-		    float density = this.getResources().getDisplayMetrics().density;
-		    int paddingPixel = (int)(paddingDp * density);
-		    frm.setPadding(0,0,0,paddingPixel);
-	    	}
-	    return;
-	}
-    }
-
 }

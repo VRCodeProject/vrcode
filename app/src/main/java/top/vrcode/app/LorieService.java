@@ -17,9 +17,11 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.InputDevice;
@@ -51,7 +53,7 @@ public class LorieService extends Service {
 
     private TouchParser mTP;
 
-    public LorieService(){
+    public LorieService() {
         instance = this;
     }
 
@@ -74,9 +76,9 @@ public class LorieService extends Service {
     @Override
     public void onCreate() {
         if (isServiceRunningInForeground(this, LorieService.class)) return;
-	SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        String Xdgpath = preferences.getString("CustXDG", "/data/data/com.termux/files/usr/tmp/");
+        @SuppressLint("SdCardPath") String Xdgpath = preferences.getString("CustXDG", "/data/data/com.termux/files/usr/tmp/");
         compositor = createLorieThread(Xdgpath);
 
         if (compositor == 0) {
@@ -103,13 +105,12 @@ public class LorieService extends Service {
         PendingIntent pendingPreferencesIntent = PendingIntent.getActivity(getApplicationContext(), 0, preferencesIntent, 0);
 
         //For creating the Foreground Service
-        int priority = Notification.PRIORITY_HIGH;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                priority = NotificationManager.IMPORTANCE_HIGH;
+        int priority;
+        priority = NotificationManager.IMPORTANCE_HIGH;
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         String channelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? getNotificationChannel(notificationManager) : "";
         Notification notification = new NotificationCompat.Builder(this, channelId)
-                .setContentTitle("Termux:X11")
+                .setContentTitle(getString(R.string.app_name))
                 .setSmallIcon(R.drawable.ic_x11_icon)
                 .setContentText("Pull down to show options")
                 .setContentIntent(pendingIntent)
@@ -122,21 +123,19 @@ public class LorieService extends Service {
                 .build();
         startForeground(1, notification);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String packageName = getPackageName();
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                Intent whitelist = new Intent();
-                whitelist.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                whitelist.setData(Uri.parse("package:" + packageName));
-                whitelist.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(whitelist);
-            }
+        String packageName = getPackageName();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            Intent whitelist = new Intent();
+            whitelist.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            whitelist.setData(Uri.parse("package:" + packageName));
+            whitelist.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(whitelist);
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private String getNotificationChannel(NotificationManager notificationManager){
+    private String getNotificationChannel(NotificationManager notificationManager) {
         String channelId = getResources().getString(R.string.app_name);
         String channelName = getResources().getString(R.string.app_name);
         NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH);
@@ -240,6 +239,7 @@ public class LorieService extends Service {
     private static class ServiceEventListener implements SurfaceHolder.Callback, View.OnTouchListener, View.OnKeyListener, View.OnHoverListener, View.OnGenericMotionListener, TouchParser.OnTouchParseListener {
         LorieService svc;
 
+        @SuppressLint("WrongConstant")
         private void setAsListenerTo(SurfaceView view) {
             view.getHolder().addCallback(this);
             view.setOnTouchListener(this);
@@ -308,6 +308,7 @@ public class LorieService extends Service {
 
         private boolean rightPressed = false; // Prevent right button press event from being repeated
         private boolean middlePressed = false; // Prevent middle button press event from being repeated
+
         @Override
         public boolean onKey(View v, int keyCode, KeyEvent e) {
             if (svc == null) return false;
@@ -316,12 +317,12 @@ public class LorieService extends Service {
             if (keyCode == KeyEvent.KEYCODE_BACK) {
                 if (
                         isSource(e, InputDevice.SOURCE_MOUSE) &&
-                        rightPressed != (e.getAction() == KeyEvent.ACTION_DOWN)
-                   ) {
+                                rightPressed != (e.getAction() == KeyEvent.ACTION_DOWN)
+                ) {
                     svc.pointerButton(TouchParser.BTN_RIGHT, (e.getAction() == KeyEvent.ACTION_DOWN) ? TouchParser.ACTION_DOWN : TouchParser.ACTION_UP);
                     rightPressed = (e.getAction() == KeyEvent.ACTION_DOWN);
                 } else if (e.getAction() == KeyEvent.ACTION_UP) {
-                    if (act.kbd!=null) act.kbd.requestFocus();
+                    if (act.kbd != null) act.kbd.requestFocus();
                     KeyboardUtils.toggleKeyboardVisibility(act);
                 }
                 return true;
@@ -329,9 +330,9 @@ public class LorieService extends Service {
 
             if (
                     keyCode == KeyEvent.KEYCODE_MENU &&
-                    isSource(e, InputDevice.SOURCE_MOUSE) &&
-                    middlePressed != (e.getAction() == KeyEvent.ACTION_DOWN)
-               ) {
+                            isSource(e, InputDevice.SOURCE_MOUSE) &&
+                            middlePressed != (e.getAction() == KeyEvent.ACTION_DOWN)
+            ) {
                 svc.pointerButton(TouchParser.BTN_MIDDLE, (e.getAction() == KeyEvent.ACTION_DOWN) ? TouchParser.ACTION_DOWN : TouchParser.ACTION_UP);
                 middlePressed = (e.getAction() == KeyEvent.ACTION_DOWN);
                 return true;
@@ -360,8 +361,13 @@ public class LorieService extends Service {
             svc.windowChanged(holder.getSurface(), width, height, mmWidth, mmHeight);
         }
 
-        @Override public void surfaceCreated(SurfaceHolder holder) {}
-        @Override public void surfaceDestroyed(SurfaceHolder holder) {}
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+        }
 
     }
 
@@ -373,35 +379,62 @@ public class LorieService extends Service {
         }
     }
 
-    private void windowChanged(Surface s, int w, int h, int pw, int ph) {windowChanged(compositor, s, w, h, pw, ph);}
+    private void windowChanged(Surface s, int w, int h, int pw, int ph) {
+        windowChanged(compositor, s, w, h, pw, ph);
+    }
+
     private native void windowChanged(long compositor, Surface surface, int width, int height, int mmWidth, int mmHeight);
-    
-    private void touchDown(int id, float x, float y) { touchDown(compositor, id, (int) x, (int) y); }
+
+    private void touchDown(int id, float x, float y) {
+        touchDown(compositor, id, (int) x, (int) y);
+    }
+
     private native void touchDown(long compositor, int id, int x, int y);
-    
-    private void touchMotion(int id, float x, float y) { touchMotion(compositor, id, (int) x, (int) y); }
+
+    private void touchMotion(int id, float x, float y) {
+        touchMotion(compositor, id, (int) x, (int) y);
+    }
+
     private native void touchMotion(long compositor, int id, int x, int y);
-    
-    private void touchUp(int id) { touchUp(compositor, id); }
+
+    private void touchUp(int id) {
+        touchUp(compositor, id);
+    }
+
     private native void touchUp(long compositor, int id);
-    
-    private void touchFrame() { touchFrame(compositor); }
+
+    private void touchFrame() {
+        touchFrame(compositor);
+    }
+
     private native void touchFrame(long compositor);
-    
-    private void pointerMotion(float x, float y) { pointerMotion(compositor, (int) x, (int) y); }
+
+    private void pointerMotion(float x, float y) {
+        pointerMotion(compositor, (int) x, (int) y);
+    }
+
     private native void pointerMotion(long compositor, int x, int y);
-    
-    private void pointerScroll(int axis, float value) { pointerScroll(compositor, axis, value); }
+
+    private void pointerScroll(int axis, float value) {
+        pointerScroll(compositor, axis, value);
+    }
+
     private native void pointerScroll(long compositor, int axis, float value);
-    
-    private void pointerButton(int button, int type) { pointerButton(compositor, button, type); }
+
+    private void pointerButton(int button, int type) {
+        pointerButton(compositor, button, type);
+    }
+
     private native void pointerButton(long compositor, int button, int type);
-    
-    private void keyboardKey(int key, int type, int shift, String characters) {keyboardKey(compositor, key, type, shift, characters);}
+
+    private void keyboardKey(int key, int type, int shift, String characters) {
+        keyboardKey(compositor, key, type, shift, characters);
+    }
+
     private native void keyboardKey(long compositor, int key, int type, int shift, String characters);
 
     private native long createLorieThread(String CustXdgpath);
-    
+
     private native void terminate(long compositor);
 
     static {
