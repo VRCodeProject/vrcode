@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">VR Code</string>
+    <string name="install_termux_tip">You should first install Termux</string>
+    <string name="install_termux_reason">VR Code relies on the runtime environment provided by Termux. You should install Termux first.\nVR Code relies on a modified version of Termux and therefore will not fit with the official version.You can download it with the button below.\nThe modified source code can be found at VRCodeProject@GitHub.</string>
+    <string name="install_termux_btn">Install Termux</string>
+    <string name="install_official_termux">You should install modified version of Termux</string>
 </resources>

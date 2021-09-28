@@ -1,28 +1,28 @@
 package top.vrcode.app
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import top.vrcode.app.AdditionalKeyboardView
 import android.widget.FrameLayout
 import android.os.Bundle
 import android.content.res.Configuration
 import android.preference.PreferenceManager
 import android.view.*
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import com.termux.shared.termux.TermuxUtils
+import top.vrcode.app.errView.TermuxNotEnableActivity
 
 class MainActivity : AppCompatActivity() {
     @JvmField
     var kbd: AdditionalKeyboardView? = null
     private var frm: FrameLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
-        val err = TermuxUtils.isTermuxAppAccessible(applicationContext)
 
+
+        val err = TermuxUtils.isTermuxAppAccessible(applicationContext)
         if (err != null) {
-            Toast.makeText(this, err, Toast.LENGTH_LONG).apply {
-                setGravity(Gravity.CENTER, 0, 0)
-            }.show()
+            val intent = Intent(this, TermuxNotEnableActivity::class.java)
             finish()
+            startActivity(intent)
         }
 
         super.onCreate(savedInstanceState)
