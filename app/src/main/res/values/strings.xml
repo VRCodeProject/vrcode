@@ -7,4 +7,7 @@
     <string name="download_failed">Failed to download Termux.</string>
     <string name="downloading_termux">Downloading Termux</string>
     <string name="have_installed_termux">Have installed</string>
+    <string name="install_x_wayland_title">You should install XWayland</string>
+    <string name="install_x_wayland_reason">VR Code relies on XWayland to provide graphical support.\nIt should be installed in Termux.</string>
+    <string name="install_x_wayland_btn">Install XWayland</string>
 </resources>
