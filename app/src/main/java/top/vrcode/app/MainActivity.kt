@@ -16,16 +16,15 @@ class MainActivity : AppCompatActivity() {
     var kbd: AdditionalKeyboardView? = null
     private var frm: FrameLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
-
+        super.onCreate(savedInstanceState)
 
         val err = TermuxUtils.isTermuxAppAccessible(applicationContext)
         if (err != null) {
             val intent = Intent(this, TermuxNotEnableActivity::class.java)
-            finish()
             startActivity(intent)
+            return
         }
 
-        super.onCreate(savedInstanceState)
         LorieService.setMainActivity(this)
         LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
         window.setSoftInputMode(

@@ -27,7 +27,7 @@ android {
             }
 
             if (password == null || password.isEmpty()) {
-                throw new GradleScriptException("Signing password not found.")
+                throw new Exception("Signing password not found.")
             }
             storeFile file('../release.jks')
             keyAlias 'key'
