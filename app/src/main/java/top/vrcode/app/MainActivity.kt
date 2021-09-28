@@ -9,7 +9,9 @@ import android.preference.PreferenceManager
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import com.termux.shared.termux.TermuxUtils
+import top.vrcode.app.errView.AddGraphicalSupportActivity
 import top.vrcode.app.errView.TermuxNotEnableActivity
+import top.vrcode.app.utils.Utils
 
 class MainActivity : AppCompatActivity() {
     @JvmField
@@ -18,12 +20,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val err = TermuxUtils.isTermuxAppAccessible(applicationContext)
-        if (err != null) {
+        val termuxErr = TermuxUtils.isTermuxAppAccessible(applicationContext)
+        if (termuxErr != null) {
             val intent = Intent(this, TermuxNotEnableActivity::class.java)
             startActivity(intent)
             return
         }
+
+        if (!Utils.checkGraphicalSupport()) {
+            val intent = Intent(this, AddGraphicalSupportActivity::class.java)
+            startActivity(intent)
+            return
+        }
+
+
 
         LorieService.setMainActivity(this)
         LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)

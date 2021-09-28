@@ -2,6 +2,7 @@ package top.vrcode.app.errView
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.app.ProgressDialog
 import android.content.Context
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -18,12 +19,23 @@ import android.database.Cursor
 import androidx.core.content.FileProvider
 import android.widget.Toast
 import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.util.Log
+import top.vrcode.app.MainActivity
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 
 class TermuxNotEnableActivity : AppCompatActivity() {
-    var downloadManager: DownloadManager? = null
-    var downloadId: Long? = null
-    var downloadPath: File? = null
+    private var downloadManager: DownloadManager? = null
+    private var downloadId: Long? = null
+    private var downloadPath: File? = null
+
+    private var progressDialog: ProgressDialog? = null
+
+    private val mExecutor = Executors.newSingleThreadScheduledExecutor()
+    private var mFuture: ScheduledFuture<*>? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +43,7 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         setContentView(R.layout.activity_termux_not_enable)
 
         val installBtn = findViewById<Button>(R.id.install_termux)
+        val goMainBtn = findViewById<Button>(R.id.termux_install2main)
         val installTitle = findViewById<AppCompatTextView>(R.id.install_termux_title)
 
         val err = TermuxUtils.isTermuxAppInstalled(applicationContext)
@@ -39,12 +52,32 @@ class TermuxNotEnableActivity : AppCompatActivity() {
             installTitle.text = getString(R.string.install_official_termux)
         }
 
+        progressDialog = ProgressDialog(this).apply {
+            setMessage(getString(R.string.downloading_termux))
+            setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+            setCancelable(false)
+            setCanceledOnTouchOutside(false)
+        }
+
         installBtn.setOnClickListener {
+            progressDialog!!.show()
             installTermuxFromNetwork()
         }
+
+        goMainBtn.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+
+        registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
-    private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
+    override fun onDestroy() {
+        super.onDestroy()
+        applicationContext.unregisterReceiver(downloadReceiver)
+    }
+
+    private val downloadReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             checkStatus()
         }
@@ -52,6 +85,7 @@ class TermuxNotEnableActivity : AppCompatActivity() {
 
     @SuppressLint("Range")
     private fun checkStatus() {
+        Log.d("CheckStatus", "Being Notified")
         val query = DownloadManager.Query()
         query.setFilterById(downloadId!!)
         val cursor: Cursor = downloadManager!!.query(query)
@@ -62,19 +96,33 @@ class TermuxNotEnableActivity : AppCompatActivity() {
                 DownloadManager.STATUS_PENDING -> {
                 }
                 DownloadManager.STATUS_RUNNING -> {
+                    val soFarSize: Long =
+                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val totalSize: Long =
+                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    val downloadProgress = (soFarSize * 1.0f / totalSize * 100).toInt()
+                    Log.d("Running Report", "Report $downloadProgress")
+                    progressDialog!!.progress = downloadProgress
                 }
                 DownloadManager.STATUS_SUCCESSFUL -> {
+                    progressDialog!!.dismiss()
+                    mFuture?.run {
+                        if (!isCancelled) cancel(true)
+                    }
                     installApk()
                     cursor.close()
                 }
                 DownloadManager.STATUS_FAILED -> {
+                    progressDialog!!.dismiss()
+                    mFuture?.run {
+                        if (!isCancelled) cancel(true)
+                    }
                     Toast.makeText(
                         applicationContext,
                         getString(R.string.download_failed),
                         Toast.LENGTH_SHORT
                     ).show()
                     cursor.close()
-                    applicationContext.unregisterReceiver(receiver)
                 }
             }
         }
@@ -82,7 +130,13 @@ class TermuxNotEnableActivity : AppCompatActivity() {
 
     private fun installTermuxFromNetwork() {
         val uri = Uri.parse(Constant.LATEST_MODIFIED_TERMUX_APP_URL)
-        val file = File(applicationContext.externalCacheDir, Constant.LATEST_MODIFIED_TERMUX_APP_FILENAME)
+        val file =
+            File(applicationContext.externalCacheDir, Constant.LATEST_MODIFIED_TERMUX_APP_FILENAME)
+
+        if (file.exists()) {
+            file.delete()
+        } // prevent duplicate download
+
         val request = DownloadManager.Request(uri).apply {
             setAllowedOverRoaming(true)
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
@@ -96,6 +150,10 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         }
 
         downloadId = downloadManager!!.enqueue(request)
+
+        mFuture = mExecutor.scheduleAtFixedRate({
+            checkStatus()
+        }, 300, 300, TimeUnit.MILLISECONDS)
     }
 
     private fun setPermission(absolutePath: String) {
