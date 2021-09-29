@@ -68,6 +68,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
 
     implementation 'com.github.termux.termux-app:termux-shared:dcedf39434'
+    implementation 'com.github.termux.termux-app:terminal-view:dcedf39434'
+
     implementation 'com.google.android.material:material:1.4.0'
 
     testImplementation 'junit:junit:4.13.2'
