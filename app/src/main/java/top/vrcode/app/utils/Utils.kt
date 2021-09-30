@@ -20,4 +20,8 @@ object Utils {
     fun checkGraphicalSupport(): Boolean {
         return checkX11RepoInstallation() and checkXWaylandInstallation()
     }
+
+    fun script2BashArray(command: String): Array<String> {
+        return arrayOf("eval", "\"$command\"")
+    }
 }
