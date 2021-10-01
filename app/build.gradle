@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 30
     defaultConfig {
         applicationId "top.vrcode.app"
         minSdkVersion 24
@@ -16,7 +16,7 @@ android {
 
     signingConfigs {
         debug {
-            def password = null
+            def password
             def CI = System.getenv("CI")
             if (CI != null) {
                 password = System.getenv("PASSWORD")

@@ -20,8 +20,8 @@ import androidx.core.content.FileProvider
 import android.widget.Toast
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
+import android.os.Handler
 import android.util.Log
-import top.vrcode.app.MainActivity
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -65,8 +65,13 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         }
 
         goMainBtn.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            Handler().postDelayed({
+                val launchIntent = packageManager.getLaunchIntentForPackage(application.packageName)
+                launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(launchIntent)
+            }, 1)
+//            val intent = Intent(this, MainActivity::class.java)
+//            startActivity(intent)
         }
 
         registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
@@ -172,8 +177,8 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         val apkUri =
             FileProvider.getUriForFile(this, Constant.VRCODE_FILE_PROVIDER_AUTHORITIES, file)
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
         applicationContext.startActivity(intent)
     }
 }

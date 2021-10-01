@@ -2,8 +2,9 @@ package top.vrcode.app.components
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.DialogInterface
 import android.graphics.Typeface
+import android.os.Handler
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.app.AlertDialog
@@ -12,37 +13,87 @@ import com.termux.shared.shell.TermuxSession
 import com.termux.shared.shell.TermuxShellEnvironmentClient
 import com.termux.shared.terminal.TermuxTerminalSessionClientBase
 import com.termux.shared.terminal.TermuxTerminalViewClientBase
+import com.termux.terminal.TerminalEmulator
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
 import com.termux.view.TerminalView
 import com.termux.view.TerminalViewClient
 import top.vrcode.app.R
+import java.lang.Exception
 
-typealias DialogSessionFinished = (TerminalDialog, TerminalSession?) -> Unit
+typealias DialogSessionCallback = (TerminalDialog, TerminalSession?) -> Unit
 
 class TerminalDialog(val context: Context) {
     private val terminalWindowView = WindowTerminalView(context)
 
     private var dialog: AlertDialog? = null
     private var termuxSession: TermuxSession? = null
+    private var terminalSession: TerminalSession? = null
     private var terminalSessionClient: TerminalSessionClient? = null
-    private var sessionFinishedCallback: DialogSessionFinished? = null
+    private var sessionFinishedCallback: DialogSessionCallback? = null
 
-    private var cancelListener: DialogInterface.OnCancelListener? = null
+    private var positiveButtonCallback: DialogSessionCallback? = null
 
     init {
-        terminalWindowView.setTerminalViewClient(TermuxTerminalViewClientBase())
-        terminalWindowView.setTerminalCursorBlinkerRate(1000)
+        terminalWindowView.setTerminalViewClient(object : TermuxTerminalViewClientBase() {
+            override fun logDebug(tag: String?, message: String?) {
+                super.logDebug(tag, message)
+                logIt(tag, message)
+            }
+
+            override fun logVerbose(tag: String?, message: String?) {
+                super.logVerbose(tag, message)
+                logIt(tag, message)
+            }
+
+            override fun logStackTraceWithMessage(tag: String?, message: String?, e: Exception?) {
+                super.logStackTraceWithMessage(tag, message, e)
+                logIt(tag, message, e)
+            }
+
+            override fun logStackTrace(tag: String?, e: Exception?) {
+                super.logStackTrace(tag, e)
+                logIt(tag, e.toString(), e)
+            }
+
+            override fun logInfo(tag: String?, message: String?) {
+                super.logInfo(tag, message)
+                logIt(tag, message)
+            }
+
+            override fun logError(tag: String?, message: String?) {
+                super.logError(tag, message)
+                logIt(tag, message)
+            }
+
+            override fun logWarn(tag: String?, message: String?) {
+                super.logWarn(tag, message)
+                logIt(tag, message)
+            }
+
+            fun logIt(tag: String?, message: String?, e: Exception? = null) {
+                message?.let { Log.d("LogIt", it, e) }
+            }
+        })
+
         terminalSessionClient = object : TermuxTerminalSessionClientBase() {
             override fun onSessionFinished(finishedSession: TerminalSession?) {
+                updateButtonVisible(View.VISIBLE)
                 sessionFinishedCallback?.let {
                     it(this@TerminalDialog, finishedSession)
                 }
                 super.onSessionFinished(finishedSession)
             }
+
+            override fun getTerminalCursorStyle(): Int {
+                return TerminalEmulator.TERMINAL_CURSOR_STYLE_BAR
+            }
         }
+    }
 
-
+    fun setPositiveButtonCallback(cb: DialogSessionCallback): TerminalDialog {
+        positiveButtonCallback = cb
+        return this
     }
 
     fun execute(command: ExecutionCommand): TerminalDialog {
@@ -54,7 +105,13 @@ class TerminalDialog(val context: Context) {
             .setView(terminalWindowView.rootView)
             .setOnCancelListener {
                 termuxSession?.killIfExecuting(context, false)
-                cancelListener?.onCancel(it)
+            }
+            .setPositiveButton(context.getString(R.string.install_x_wayland_dialog_button)) { _, _ ->
+                run {
+                    positiveButtonCallback?.let {
+                        it(this@TerminalDialog, termuxSession?.terminalSession)
+                    }
+                }
             }
             .create()
 
@@ -68,17 +125,17 @@ class TerminalDialog(val context: Context) {
             "wayland",
             true
         )
-        val terminalSession = termuxSession?.terminalSession
-
-        terminalSession?.let {
-            terminalWindowView.attachSession(it)
+        terminalSession = termuxSession?.terminalSession
+        terminalWindowView.terminalView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            run {
+                terminalSession?.let {
+                    terminalWindowView.attachSession(it)
+                }
+                terminalWindowView.setTerminalCursor(500) // Will return when view is null
+            }
+            // TODO: works as a trick, the view can only be measured after dialog exists. And getHeight && getWidth can work properly.
+            // A better choice is define View draw ourselves.
         }
-
-        return this
-    }
-
-    fun onDismiss(cancelListener: DialogInterface.OnCancelListener?): TerminalDialog {
-        this.cancelListener = cancelListener
         return this
     }
 
@@ -87,7 +144,7 @@ class TerminalDialog(val context: Context) {
         return this
     }
 
-    fun onFinish(finishedCallback: DialogSessionFinished): TerminalDialog {
+    fun onFinish(finishedCallback: DialogSessionCallback): TerminalDialog {
         this.sessionFinishedCallback = finishedCallback
         return this
     }
@@ -96,9 +153,20 @@ class TerminalDialog(val context: Context) {
         dialog?.setTitle(title)
         dialog?.setCanceledOnTouchOutside(false)
         dialog?.setCancelable(false)
+
+        updateButtonVisible(View.GONE)
+
         dialog?.show()
     }
 
+    fun updateButtonVisible(visible: Int) {
+        val button = dialog?.getButton(AlertDialog.BUTTON_POSITIVE)
+        button?.let {
+            it.visibility = visible
+        }
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
     fun dismiss(): TerminalDialog {
         dialog?.dismiss()
         return this
@@ -132,9 +200,10 @@ class WindowTerminalView(val context: Context) {
         terminalView.setTerminalViewClient(terminalViewClient)
     }
 
-    fun setTerminalCursorBlinkerRate(blinkRate: Int) {
+    fun setTerminalCursor(blinkRate: Int) {
+        terminalView.mEmulator.setCursorStyle()
         terminalView.setTerminalCursorBlinkerRate(blinkRate)
-        terminalView.setTerminalCursorBlinkerState(true, true)
+        terminalView.setTerminalCursorBlinkerState(true, false)
     }
 
     fun attachSession(terminalSession: TerminalSession?) {
