@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.preference.PreferenceManager
 import android.view.*
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AlertDialog
 import com.termux.shared.termux.TermuxUtils
 import top.vrcode.app.errView.AddGraphicalSupportActivity
 import top.vrcode.app.errView.TermuxNotEnableActivity
@@ -35,6 +36,37 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val inited = preferences.getBoolean(Constant.VRCODE_INITED_KEY, false)
+
+        if (!inited) {
+            fun setInited() {
+                preferences.edit().apply {
+                    putBoolean(Constant.VRCODE_INITED_KEY, true)
+                    apply()
+                }
+            }
+
+            var deChoosedID = 0;
+
+            val deChooser = AlertDialog.Builder(this)
+                .setTitle(getString(R.string.de_chooser_dialog_title))
+                .setSingleChoiceItems(
+                    Constant.AVAILABLE_DESKTOP_ENVS,
+                    deChoosedID
+                ) { _, which -> deChoosedID = which }
+                .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
+                    run {
+                        // TODO: tools choose show
+                        dialog.dismiss()
+                    }
+                }
+                .create()
+                .setCanceledOnTouchOutside(false)
+
+
+        }
+
 
 
         LorieService.setMainActivity(this)
@@ -46,8 +78,10 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.main_activity)
+
         kbd = findViewById(R.id.additionalKbd)
         frm = findViewById(R.id.frame)
+
         window.decorView.pointerIcon =
             PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
     }

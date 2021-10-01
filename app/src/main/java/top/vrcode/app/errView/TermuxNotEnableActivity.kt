@@ -7,7 +7,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
+import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
 import com.termux.shared.termux.TermuxUtils
 import top.vrcode.app.Constant
@@ -42,8 +42,8 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_termux_not_enable)
 
-        val installBtn = findViewById<Button>(R.id.install_termux)
-        val goMainBtn = findViewById<Button>(R.id.termux_install2main)
+        val installBtn = findViewById<AppCompatButton>(R.id.install_termux)
+        val goMainBtn = findViewById<AppCompatButton>(R.id.termux_install2main)
         val installTitle = findViewById<AppCompatTextView>(R.id.install_termux_title)
 
         val err = TermuxUtils.isTermuxAppInstalled(applicationContext)

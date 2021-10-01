@@ -7,9 +7,17 @@
     <string name="download_failed">Failed to download Termux.</string>
     <string name="downloading_termux">Downloading Termux</string>
     <string name="have_installed_termux">Have installed</string>
+
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+
+    <!--    XWayland install strings    -->
     <string name="install_x_wayland_title">You should install XWayland</string>
     <string name="install_x_wayland_reason">VR Code relies on XWayland to provide graphical support.\nIt should be installed in Termux.</string>
     <string name="install_x_wayland_btn">Install XWayland</string>
     <string name="install_x_wayland_dialog_button">Done</string>
     <string name="install_x_wayland_dialog_toast">Session is running, cannot cancel.</string>
+
+    <!--    init dialog strings    -->
+    <string name="de_chooser_dialog_title">Choose Desktop Environment</string>
 </resources>
