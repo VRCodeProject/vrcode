@@ -24,4 +24,5 @@
     <string name="run_install_chosen">"Install Chosen Software"</string>
 
     <string name="desktop_notification_name">Desktop Service</string>
+    <string name="desktop_notification_content">Desktop Service is running</string>
 </resources>

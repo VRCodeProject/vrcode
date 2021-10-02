@@ -20,7 +20,8 @@ object Utils {
 
     fun reborn(application: Application) {
         Handler().postDelayed({
-            val launchIntent = application.applicationContext.packageManager.getLaunchIntentForPackage(application.packageName)
+            val launchIntent =
+                application.applicationContext.packageManager.getLaunchIntentForPackage(application.packageName)
             launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             application.applicationContext.startActivity(launchIntent)
         }, 1)
@@ -35,7 +36,7 @@ object Utils {
 
     fun ByteArray.toHex() = joinToString(separator = "") { byte -> "%02x".format(byte) }
 
-    class BashScript(val command: String) {
+    class BashScript(val command: String, background: Boolean = false) {
         companion object {
             @JvmStatic
             private var COMMAND_ID = 2003
@@ -53,7 +54,7 @@ object Utils {
                 saveTempScript(command),
                 null,
                 null,
-                false,
+                background,
                 false
             )
         }

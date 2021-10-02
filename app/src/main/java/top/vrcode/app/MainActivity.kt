@@ -154,6 +154,23 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, DesktopEnvService::class.java)
             intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopType)
             startService(intent)
+//            val scriptString =
+//                application.assets.open("xfce_session.sh")
+//                    .bufferedReader().use {
+//                        it.readText()
+//                    }
+//            val bashScript = Utils.BashScript(scriptString, true)
+//            TerminalDialog(this)
+//                .execute(
+//                    bashScript.get()
+//                ).setPositiveButtonCallback { terminalDialog, terminalSession ->
+//                    run {
+//                        Log.d("TerminalCheck", terminalSession?.isRunning.toString())
+//                        if ((terminalSession?.isRunning != true)) {
+//                            terminalDialog.dismiss()
+//                        }
+//                    }
+//                }.show("Test")
         }
     }
 
