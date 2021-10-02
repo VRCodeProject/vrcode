@@ -21,4 +21,7 @@
     <!--    init dialog strings    -->
     <string name="de_chooser_dialog_title">Choose Desktop Environment</string>
     <string name="tools_chooser_dialog_title">Choose Tools</string>
+    <string name="run_install_chosen">"Install Chosen Software"</string>
+
+    <string name="desktop_notification_name">Desktop Service</string>
 </resources>

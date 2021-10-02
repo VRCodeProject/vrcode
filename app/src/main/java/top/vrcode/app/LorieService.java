@@ -100,9 +100,9 @@ public class LorieService extends Service {
         Intent preferencesIntent = new Intent(getApplicationContext(), LoriePreferences.class);
         preferencesIntent.setAction(ACTION_START_PREFERENCES_ACTIVITY);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        PendingIntent pendingExitIntent = PendingIntent.getService(getApplicationContext(), 0, exitIntent, 0);
-        PendingIntent pendingPreferencesIntent = PendingIntent.getActivity(getApplicationContext(), 0, preferencesIntent, 0);
+        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingExitIntent = PendingIntent.getService(getApplicationContext(), 0, exitIntent, 0);
+        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingPreferencesIntent = PendingIntent.getActivity(getApplicationContext(), 0, preferencesIntent, 0);
 
         //For creating the Foreground Service
         int priority;

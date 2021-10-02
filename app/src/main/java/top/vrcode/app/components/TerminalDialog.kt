@@ -122,7 +122,7 @@ class TerminalDialog(val context: Context) {
             terminalSessionClient!!,
             null,
             TermuxShellEnvironmentClient(),
-            "wayland",
+            "dialog",
             true
         )
         terminalSession = termuxSession?.terminalSession
@@ -154,13 +154,15 @@ class TerminalDialog(val context: Context) {
         dialog?.setCanceledOnTouchOutside(false)
         dialog?.setCancelable(false)
 
-        updateButtonVisible(View.GONE)
-
         dialog?.show()
+        updateButtonVisible(View.GONE)
     }
 
     fun updateButtonVisible(visible: Int) {
+        Log.d("UpdateButtonVisible", "Set $visible, and dialog is ${dialog != null}")
+
         val button = dialog?.getButton(AlertDialog.BUTTON_POSITIVE)
+        Log.d("UpdateButtonVisible", "Button is ${button != null}")
         button?.let {
             it.visibility = visible
         }

@@ -40,8 +40,9 @@ class MainActivity : AppCompatActivity() {
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val inited = preferences.getBoolean(Constant.VRCODE_INITED_KEY, false)
+        val desktopEnvType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
 
-        if (!inited) {
+        if (!inited || desktopEnvType == null) {
             setContentView(R.layout.main_activity)
 
             fun setInited() {
@@ -52,6 +53,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             fun installChosenSoftware(deChosenID: Int, toolChosenIDs: MutableList<Int>) {
+                preferences.edit().apply {
+                    putString(
+                        Constant.CHOSEN_DESKTOP_ENV_KEY,
+                        Constant.AVAILABLE_DESKTOP_ENVS[deChosenID]
+                    )
+                    apply()
+                }
+
                 var execScript = ""
                 execScript += Constant.DESKTOP_ENV_INSTALL_SCRIPTS[Constant.AVAILABLE_DESKTOP_ENVS[deChosenID]] + "\n"
                 for (id in toolChosenIDs) {
@@ -77,13 +86,13 @@ class MainActivity : AppCompatActivity() {
                     ).setPositiveButtonCallback { terminalDialog, terminalSession ->
                         run {
                             Log.d("TerminalCheck", terminalSession?.isRunning.toString())
-                            if ((terminalSession?.isRunning != true) and (terminalSession?.exitStatus == 0)) {
+                            if ((terminalSession?.isRunning != true)) {
                                 terminalDialog.dismiss()
                                 setInited()
                                 Utils.reborn(application)
                             }
                         }
-                    }
+                    }.show(getString(R.string.run_install_chosen))
             }
 
             var deChosenID = 0;
@@ -140,9 +149,12 @@ class MainActivity : AppCompatActivity() {
 
             window.decorView.pointerIcon =
                 PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
+
+            val desktopType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
+            val intent = Intent(this, DesktopEnvService::class.java)
+            intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopType)
+            startService(intent)
         }
-
-
     }
 
     var orientation = 0
@@ -162,7 +174,7 @@ class MainActivity : AppCompatActivity() {
     fun onLorieServiceStart(instance: LorieService) {
         val lorieView = findViewById<SurfaceView>(R.id.lorieView)
         instance.setListeners(lorieView)
-        kbd!!.reload(keys, lorieView, LorieService.getOnKeyListener())
+        kbd?.reload(keys, lorieView, LorieService.getOnKeyListener())
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

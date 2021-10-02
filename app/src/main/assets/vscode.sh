@@ -12,4 +12,4 @@ rm -rf vscode.tar.gz
 
 mkdir "${PREFIX}"/tools/VSCode-linux-arm64/data
 
-lm -f -s "${PREFIX}"/tools/VSCode-linux-arm64/code "${PREFIX}"/bin/code
+ln -f -s "${PREFIX}"/tools/VSCode-linux-arm64/code "${PREFIX}"/bin/code
