@@ -32,7 +32,7 @@ class LorieService : Service() {
     //static
     var compositor: Long = 0
     private var mTP: TouchParser? = null
-    private var session:TermuxSession? = null
+    private var session: TermuxSession? = null
 
     @SuppressLint("BatteryLife,UnspecifiedImmutableFlag")
     override fun onCreate() {
@@ -311,6 +311,7 @@ class LorieService : Service() {
             }
             if (e.action == KeyEvent.ACTION_DOWN) action = TouchParser.ACTION_DOWN
             if (e.action == KeyEvent.ACTION_UP) action = TouchParser.ACTION_UP
+            if (e.characters == null) return false
             svc!!.keyboardKey(action, keyCode, if (e.isShiftPressed) 1 else 0, e.characters)
             return true
         }
