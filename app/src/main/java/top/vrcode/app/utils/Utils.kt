@@ -1,5 +1,9 @@
 package top.vrcode.app.utils
 
+import android.app.Application
+import android.content.Context
+import android.content.Intent
+import android.os.Handler
 import com.termux.shared.models.ExecutionCommand
 import com.termux.shared.termux.TermuxConstants
 import java.io.File
@@ -12,6 +16,14 @@ object Utils {
         val xWaylandFilePath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/Xwayland"
         val xWaylandFile = File(xWaylandFilePath)
         return xWaylandFile.exists()
+    }
+
+    fun reborn(application: Application) {
+        Handler().postDelayed({
+            val launchIntent = application.applicationContext.packageManager.getLaunchIntentForPackage(application.packageName)
+            launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            application.applicationContext.startActivity(launchIntent)
+        }, 1)
     }
 
     fun checkGraphicalSupport(): Boolean {

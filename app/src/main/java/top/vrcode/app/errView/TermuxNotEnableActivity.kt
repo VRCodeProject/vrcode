@@ -22,6 +22,7 @@ import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.os.Handler
 import android.util.Log
+import top.vrcode.app.utils.Utils
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -65,11 +66,7 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         }
 
         goMainBtn.setOnClickListener {
-            Handler().postDelayed({
-                val launchIntent = packageManager.getLaunchIntentForPackage(application.packageName)
-                launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                startActivity(launchIntent)
-            }, 1)
+            Utils.reborn(application)
 //            val intent = Intent(this, MainActivity::class.java)
 //            startActivity(intent)
         }

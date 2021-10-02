@@ -6,10 +6,12 @@ import android.widget.FrameLayout
 import android.os.Bundle
 import android.content.res.Configuration
 import android.preference.PreferenceManager
+import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import com.termux.shared.termux.TermuxUtils
+import top.vrcode.app.components.TerminalDialog
 import top.vrcode.app.errView.AddGraphicalSupportActivity
 import top.vrcode.app.errView.TermuxNotEnableActivity
 import top.vrcode.app.utils.Utils
@@ -40,6 +42,8 @@ class MainActivity : AppCompatActivity() {
         val inited = preferences.getBoolean(Constant.VRCODE_INITED_KEY, false)
 
         if (!inited) {
+            setContentView(R.layout.main_activity)
+
             fun setInited() {
                 preferences.edit().apply {
                     putBoolean(Constant.VRCODE_INITED_KEY, true)
@@ -47,43 +51,98 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            var deChoosedID = 0;
+            fun installChosenSoftware(deChosenID: Int, toolChosenIDs: MutableList<Int>) {
+                var execScript = ""
+                execScript += Constant.DESKTOP_ENV_INSTALL_SCRIPTS[Constant.AVAILABLE_DESKTOP_ENVS[deChosenID]] + "\n"
+                for (id in toolChosenIDs) {
+                    val scriptOrName = Constant.TOOLS_INSTALL_SCRIPTS[Constant.AVAILABLE_TOOLS[id]]
+                    if (scriptOrName != null) {
+                        var realScript: String
+                        if (scriptOrName.startsWith(Constant.SCRIPT_IN_ASSET)) {
+                            realScript =
+                                application.assets.open(scriptOrName.substring(Constant.SCRIPT_IN_ASSET.length))
+                                    .bufferedReader().use {
+                                        it.readText()
+                                    }
+                        } else {
+                            realScript = scriptOrName
+                        }
+                        execScript += realScript + "\n"
+                    }
+                }
+                val bashScript = Utils.BashScript(execScript)
+                TerminalDialog(this)
+                    .execute(
+                        bashScript.get()
+                    ).setPositiveButtonCallback { terminalDialog, terminalSession ->
+                        run {
+                            Log.d("TerminalCheck", terminalSession?.isRunning.toString())
+                            if ((terminalSession?.isRunning != true) and (terminalSession?.exitStatus == 0)) {
+                                terminalDialog.dismiss()
+                                setInited()
+                                Utils.reborn(application)
+                            }
+                        }
+                    }
+            }
+
+            var deChosenID = 0;
+            val toolChosenIDs = mutableListOf<Int>()
+
+            val toolChooser = AlertDialog.Builder(this)
+                .setTitle(getString(R.string.tools_chooser_dialog_title))
+                .setMultiChoiceItems(Constant.AVAILABLE_TOOLS, null) { _, which, isChecked ->
+                    run {
+                        if (isChecked) {
+                            toolChosenIDs.add(which)
+                        } else {
+                            toolChosenIDs.remove(which)
+                        }
+                    }
+                }
+                .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
+                    run {
+                        dialog.dismiss()
+                        installChosenSoftware(deChosenID, toolChosenIDs)
+                    }
+                }
+                .create()
+            toolChooser.setCanceledOnTouchOutside(false)
 
             val deChooser = AlertDialog.Builder(this)
                 .setTitle(getString(R.string.de_chooser_dialog_title))
                 .setSingleChoiceItems(
                     Constant.AVAILABLE_DESKTOP_ENVS,
-                    deChoosedID
-                ) { _, which -> deChoosedID = which }
+                    deChosenID
+                ) { _, which -> deChosenID = which }
                 .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
                     run {
-                        // TODO: tools choose show
                         dialog.dismiss()
+                        toolChooser.show()
                     }
                 }
                 .create()
-                .setCanceledOnTouchOutside(false)
+            deChooser.setCanceledOnTouchOutside(false)
+            deChooser.show()
+        } else {
+            LorieService.setMainActivity(this)
+            LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
+            window.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or
+                        WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+            )
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.main_activity)
 
+            kbd = findViewById(R.id.additionalKbd)
+            frm = findViewById(R.id.frame)
 
+            window.decorView.pointerIcon =
+                PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
         }
 
 
-
-        LorieService.setMainActivity(this)
-        LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
-        window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or
-                    WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
-        )
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
-        setContentView(R.layout.main_activity)
-
-        kbd = findViewById(R.id.additionalKbd)
-        frm = findViewById(R.id.frame)
-
-        window.decorView.pointerIcon =
-            PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
     }
 
     var orientation = 0
