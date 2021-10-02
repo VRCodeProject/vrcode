@@ -23,6 +23,7 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.util.Log
 import top.vrcode.app.utils.Utils
+import top.vrcode.app.utils.Utils.setPermission
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -158,15 +159,7 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         }, 300, 300, TimeUnit.MILLISECONDS)
     }
 
-    private fun setPermission(absolutePath: String) {
-        val command = "chmod 777 $absolutePath"
-        val runtime = Runtime.getRuntime()
-        try {
-            runtime.exec(command)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+
 
     private fun installApk(file: File = downloadPath!!) {
         setPermission(file.absolutePath)

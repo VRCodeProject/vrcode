@@ -7,6 +7,7 @@ import android.os.Handler
 import com.termux.shared.models.ExecutionCommand
 import com.termux.shared.termux.TermuxConstants
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import kotlin.text.Charsets.UTF_8
 
@@ -29,6 +30,16 @@ object Utils {
 
     fun checkGraphicalSupport(): Boolean {
         return checkXWaylandInstallation()
+    }
+
+    fun setPermission(absolutePath: String) {
+        val command = "chmod 777 $absolutePath"
+        val runtime = Runtime.getRuntime()
+        try {
+            runtime.exec(command)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
     fun md5(str: String): ByteArray =
