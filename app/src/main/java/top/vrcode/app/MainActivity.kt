@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.FrameLayout
 import android.os.Bundle
 import android.content.res.Configuration
+import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.*
@@ -40,9 +41,8 @@ class MainActivity : AppCompatActivity() {
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val inited = preferences.getBoolean(Constant.VRCODE_INITED_KEY, false)
-        val desktopEnvType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
 
-        if (!inited || desktopEnvType == null) {
+        if (!inited) {
             setContentView(R.layout.main_activity)
 
             fun setInited() {
@@ -150,27 +150,6 @@ class MainActivity : AppCompatActivity() {
             window.decorView.pointerIcon =
                 PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
 
-            val desktopType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
-            val intent = Intent(this, DesktopEnvService::class.java)
-            intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopType)
-            startService(intent)
-//            val scriptString =
-//                application.assets.open("xfce_session.sh")
-//                    .bufferedReader().use {
-//                        it.readText()
-//                    }
-//            val bashScript = Utils.BashScript(scriptString, true)
-//            TerminalDialog(this)
-//                .execute(
-//                    bashScript.get()
-//                ).setPositiveButtonCallback { terminalDialog, terminalSession ->
-//                    run {
-//                        Log.d("TerminalCheck", terminalSession?.isRunning.toString())
-//                        if ((terminalSession?.isRunning != true)) {
-//                            terminalDialog.dismiss()
-//                        }
-//                    }
-//                }.show("Test")
         }
     }
 
@@ -192,6 +171,16 @@ class MainActivity : AppCompatActivity() {
         val lorieView = findViewById<SurfaceView>(R.id.lorieView)
         instance.setListeners(lorieView)
         kbd?.reload(keys, lorieView, LorieService.getOnKeyListener())
+
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val desktopEnvType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
+            ?: throw Exception("Desktop Env not found")
+
+        Handler().postDelayed({
+            val intent = Intent(this, DesktopEnvService::class.java)
+            intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopEnvType)
+            startService(intent)
+        }, 500)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

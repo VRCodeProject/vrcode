@@ -48,7 +48,7 @@ public class LorieService extends Service {
     //private
     //static
     long compositor;
-    private static ServiceEventListener listener = new ServiceEventListener();
+    private static final ServiceEventListener listener = new ServiceEventListener();
     private static MainActivity act;
 
     private TouchParser mTP;
