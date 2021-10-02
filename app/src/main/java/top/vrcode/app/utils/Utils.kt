@@ -25,7 +25,7 @@ object Utils {
                 application.applicationContext.packageManager.getLaunchIntentForPackage(application.packageName)
             launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             application.applicationContext.startActivity(launchIntent)
-        }, 1)
+        }, 100)
     }
 
     fun checkGraphicalSupport(): Boolean {

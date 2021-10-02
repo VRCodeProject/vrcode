@@ -1,443 +1,463 @@
-package top.vrcode.app;
+package top.vrcode.app
 
-import android.annotation.SuppressLint;
-import android.app.ActivityManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.net.Uri;
-import android.os.Build;
-import android.os.IBinder;
-import android.os.PowerManager;
-import android.preference.PreferenceManager;
-import android.provider.Settings;
+import android.annotation.SuppressLint
+import android.app.*
+import android.content.Context
+import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.PixelFormat
+import android.net.Uri
+import android.os.Build
+import android.os.IBinder
+import android.os.PowerManager
+import android.preference.PreferenceManager
+import android.provider.Settings
+import android.util.DisplayMetrics
+import android.util.Log
+import android.view.*
+import android.view.View.*
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import com.termux.shared.shell.TermuxSession
+import com.termux.shared.shell.TermuxShellEnvironmentClient
+import com.termux.shared.terminal.TermuxTerminalSessionClientBase
+import com.termux.terminal.TerminalSession
+import top.vrcode.app.TouchParser.OnTouchParseListener
+import top.vrcode.app.utils.Utils
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.NotificationCompat;
-
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.InputDevice;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Toast;
-import android.graphics.PixelFormat;
-
-
-@SuppressWarnings({"ConstantConditions", "SameParameterValue"})
-@SuppressLint({"ClickableViewAccessibility", "StaticFieldLeak"})
-public class LorieService extends Service {
-
-    static final String ACTION_STOP_SERVICE = "com.termux.x11.service_stop";
-    static final String ACTION_START_FROM_ACTIVITY = "com.termux.x11.start_from_activity";
-    static final String ACTION_START_PREFERENCES_ACTIVITY = "com.termux.x11.start_preferences_activity";
-    static final String ACTION_PREFERENCES_CHAGED = "com.termux.x11.preferences_changed";
-
-    private static LorieService instance = null;
+@SuppressLint("ClickableViewAccessibility", "StaticFieldLeak")
+class LorieService : Service() {
     //private
     //static
-    long compositor;
-    private static final ServiceEventListener listener = new ServiceEventListener();
-    private static MainActivity act;
+    var compositor: Long = 0
+    private var mTP: TouchParser? = null
+    private var session:TermuxSession? = null
 
-    private TouchParser mTP;
-
-    public LorieService() {
-        instance = this;
-    }
-
-    static void setMainActivity(MainActivity activity) {
-        act = activity;
-    }
-
-    static void start(String action) {
-        Intent intent = new Intent(act, LorieService.class);
-        intent.setAction(action);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            act.startForegroundService(intent);
-        } else {
-            act.startService(intent);
+    @SuppressLint("BatteryLife,UnspecifiedImmutableFlag")
+    override fun onCreate() {
+        if (isServiceRunningInForeground(this, LorieService::class.java)) return
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        @SuppressLint("SdCardPath") val Xdgpath =
+            preferences.getString("CustXDG", "/data/data/com.termux/files/usr/tmp/")
+        compositor = createLorieThread(Xdgpath)
+        if (compositor == 0L) {
+            Log.e("LorieService", "compositor thread was not created")
+            return
         }
-    }
+        instance = this
+        Toast.makeText(this, "Service was Created", Toast.LENGTH_LONG).show()
+        Log.e("LorieService", "created")
+        val notificationIntent = Intent(applicationContext, MainActivity::class.java)
+        notificationIntent.putExtra("foo_bar_extra_key", "foo_bar_extra_value")
+        notificationIntent.action = java.lang.Long.toString(System.currentTimeMillis())
+        val exitIntent = Intent(applicationContext, LorieService::class.java)
+        exitIntent.action = ACTION_STOP_SERVICE
+        val preferencesIntent = Intent(applicationContext, LoriePreferences::class.java)
+        preferencesIntent.action = ACTION_START_PREFERENCES_ACTIVITY
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val pendingExitIntent = PendingIntent.getService(
+            applicationContext, 0, exitIntent, 0
+        )
+        val pendingPreferencesIntent =
+            PendingIntent.getActivity(
+                applicationContext, 0, preferencesIntent, 0
+            )
 
-    @SuppressLint("BatteryLife")
-    @Override
-    public void onCreate() {
-        if (isServiceRunningInForeground(this, LorieService.class)) return;
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        @SuppressLint("SdCardPath") String Xdgpath = preferences.getString("CustXDG", "/data/data/com.termux/files/usr/tmp/");
-        compositor = createLorieThread(Xdgpath);
-
-        if (compositor == 0) {
-            Log.e("LorieService", "compositor thread was not created");
-            return;
-        }
-
-        instance = this;
-        Toast.makeText(this, "Service was Created", Toast.LENGTH_LONG).show();
-        Log.e("LorieService", "created");
-
-        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-        notificationIntent.putExtra("foo_bar_extra_key", "foo_bar_extra_value");
-        notificationIntent.setAction(Long.toString(System.currentTimeMillis()));
-
-        Intent exitIntent = new Intent(getApplicationContext(), LorieService.class);
-        exitIntent.setAction(ACTION_STOP_SERVICE);
-
-        Intent preferencesIntent = new Intent(getApplicationContext(), LoriePreferences.class);
-        preferencesIntent.setAction(ACTION_START_PREFERENCES_ACTIVITY);
-
-        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingExitIntent = PendingIntent.getService(getApplicationContext(), 0, exitIntent, 0);
-        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingPreferencesIntent = PendingIntent.getActivity(getApplicationContext(), 0, preferencesIntent, 0);
-
-        //For creating the Foreground Service
-        int priority;
-        priority = NotificationManager.IMPORTANCE_HIGH;
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        String channelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? getNotificationChannel(notificationManager) : "";
-        Notification notification = new NotificationCompat.Builder(this, channelId)
-                .setContentTitle(getString(R.string.app_name))
-                .setSmallIcon(R.drawable.ic_x11_icon)
-                .setContentText("Pull down to show options")
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .setPriority(priority)
-                .setShowWhen(false)
-                .setColor(0xFF607D8B)
-                .addAction(0, "Preferences", pendingPreferencesIntent)
-                .addAction(0, "Exit", pendingExitIntent)
-                .build();
-        startForeground(1, notification);
-
-        String packageName = getPackageName();
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        // For creating the Foreground Service
+        val priority: Int = NotificationManager.IMPORTANCE_HIGH
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getNotificationChannel(
+            notificationManager
+        ) else ""
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle(getString(R.string.app_name))
+            .setSmallIcon(R.drawable.ic_x11_icon)
+            .setContentText("Pull down to show options")
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setPriority(priority)
+            .setShowWhen(false)
+            .setColor(-0x9f8275)
+            .addAction(0, "Preferences", pendingPreferencesIntent)
+            .addAction(0, "Exit", pendingExitIntent)
+            .build()
+        startForeground(1, notification)
+        val packageName = packageName
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
         if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-            Intent whitelist = new Intent();
-            whitelist.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-            whitelist.setData(Uri.parse("package:" + packageName));
-            whitelist.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(whitelist);
+            val whitelist = Intent()
+            whitelist.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            whitelist.data = Uri.parse("package:$packageName")
+            whitelist.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(whitelist)
+        }
+
+        // Setup Desktop Environment
+        val desktopType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
+        if (desktopType != null && desktopType in Constant.AVAILABLE_DESKTOP_ENVS) {
+            val scriptString =
+                application.assets.open(Constant.DESKTOP_ENV_STARTUP_SCRIPTS[desktopType]!!)
+                    .bufferedReader().use {
+                        it.readText()
+                    }
+            val bashScript = Utils.BashScript(scriptString, true)
+            val client = object : TermuxTerminalSessionClientBase() {
+                override fun onTextChanged(changedSession: TerminalSession?) {
+                    Log.d("Session", changedSession?.isRunning.toString())
+                }
+
+                override fun onSessionFinished(finishedSession: TerminalSession?) {
+                    Log.d("Session", "session dead")
+                }
+            }
+            val environment = object : TermuxShellEnvironmentClient() {
+                override fun buildEnvironment(
+                    currentPackageContext: Context?,
+                    isFailSafe: Boolean,
+                    workingDirectory: String?
+                ): Array<String> {
+                    val list = super.buildEnvironment(
+                        currentPackageContext,
+                        isFailSafe,
+                        workingDirectory
+                    ).toMutableList()
+                    Constant.XWAYLAND_ENVS.forEach {
+                        list.add(it)
+                    }
+                    return list.toTypedArray()
+                }
+            }
+            // Log.d("Service", "Start Desktop 2")
+            session = TermuxSession.execute(
+                this,
+                bashScript.get(),
+                client,
+                null,
+                environment,
+                "desktop",
+                true
+            )
+            session!!.terminalSession.initializeEmulator(1, 1)
+            // TODO: Here's another fucking trick, it set size to 1,1 and start execute command.
+            // With this, there's no need to call JNI function manually.
+
+        } else {
+            throw Exception("Unknown Desktop Env type $desktopType")
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private String getNotificationChannel(NotificationManager notificationManager) {
-        String channelId = getResources().getString(R.string.app_name);
-        String channelName = getResources().getString(R.string.app_name);
-        NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH);
-        channel.setImportance(NotificationManager.IMPORTANCE_NONE);
-        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        notificationManager.createNotificationChannel(channel);
-        return channelId;
+    private fun getNotificationChannel(notificationManager: NotificationManager): String {
+        val channelId = resources.getString(R.string.app_name)
+        val channelName = resources.getString(R.string.app_name)
+        val channel =
+            NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+        channel.importance = NotificationManager.IMPORTANCE_NONE
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        notificationManager.createNotificationChannel(channel)
+        return channelId
     }
 
-    public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return service.foreground;
-            }
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        Log.e("LorieService", "start")
+        val action = intent.action
+        if (action == ACTION_START_FROM_ACTIVITY) {
+            act!!.onLorieServiceStart(this)
         }
-        return false;
-    }
-
-    private static void onPreferencesChanged() {
-        if (instance == null || act == null) return;
-
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(instance);
-
-        int mode = Integer.parseInt(preferences.getString("touchMode", "1"));
-        instance.mTP.setMode(mode);
-        Log.e("LorieService", "Preferences changed");
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.e("LorieService", "start");
-        String action = intent.getAction();
-
-        if (action.equals(ACTION_START_FROM_ACTIVITY)) {
-            act.onLorieServiceStart(this);
+        if (action == ACTION_STOP_SERVICE) {
+            Log.e("LorieService", action)
+            terminate()
+            sleep(500)
+            act!!.finish()
+            stopSelf()
+            System.exit(0) // This is needed to completely finish the process
         }
+        onPreferencesChanged()
+        return START_REDELIVER_INTENT
+    }
 
-        if (action.equals(ACTION_STOP_SERVICE)) {
-            Log.e("LorieService", action);
-            terminate();
-            sleep(500);
-            act.finish();
-            stopSelf();
-            System.exit(0); // This is needed to completely finish the process
+    override fun onDestroy() {
+        Log.e("LorieService", "destroyed")
+    }
+
+    fun setListeners(view: SurfaceView) {
+        val a = view.rootView.findViewById<View>(android.R.id.content).context
+        if (a !is MainActivity) {
+            Log.e("LorieService", "Context is not an activity!!!")
         }
-
-        onPreferencesChanged();
-
-        return START_REDELIVER_INTENT;
+        act = a as MainActivity
+        view.isFocusable = true
+        view.isFocusableInTouchMode = true
+        view.requestFocus()
+        listener.svc = this
+        listener.setAsListenerTo(view)
+        mTP = TouchParser(view, listener)
+        onPreferencesChanged()
     }
 
-
-    @Override
-    public void onDestroy() {
-        Log.e("LorieService", "destroyed");
+    fun terminate() {
+        terminate(compositor)
+        compositor = 0
+        Log.e("LorieService", "terminate")
     }
 
-    static LorieService getInstance() {
-        if (instance == null) {
-            Log.e("LorieService", "Instance was requested, but no instances available");
-        }
-        return instance;
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
-    void setListeners(@NonNull SurfaceView view) {
-        Context a = view.getRootView().findViewById(android.R.id.content).getContext();
-        if (!(a instanceof MainActivity)) {
-            Log.e("LorieService", "Context is not an activity!!!");
-        }
-
-        act = (MainActivity) a;
-
-        view.setFocusable(true);
-        view.setFocusableInTouchMode(true);
-        view.requestFocus();
-
-        listener.svc = this;
-        listener.setAsListenerTo(view);
-
-        mTP = new TouchParser(view, listener);
-        onPreferencesChanged();
-    }
-
-    static View.OnKeyListener getOnKeyListener() {
-        return listener;
-    }
-
-    void terminate() {
-        terminate(compositor);
-        compositor = 0;
-        Log.e("LorieService", "terminate");
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static class ServiceEventListener implements SurfaceHolder.Callback, View.OnTouchListener, View.OnKeyListener, View.OnHoverListener, View.OnGenericMotionListener, TouchParser.OnTouchParseListener {
-        LorieService svc;
+    private class ServiceEventListener : SurfaceHolder.Callback, OnTouchListener,
+        View.OnKeyListener, OnHoverListener, OnGenericMotionListener, OnTouchParseListener {
+        var svc: LorieService? = null
 
         @SuppressLint("WrongConstant")
-        private void setAsListenerTo(SurfaceView view) {
-            view.getHolder().addCallback(this);
-            view.setOnTouchListener(this);
-            view.setOnHoverListener(this);
-            view.setOnGenericMotionListener(this);
-            view.setOnKeyListener(this);
-            surfaceChanged(view.getHolder(), PixelFormat.UNKNOWN, view.getWidth(), view.getHeight());
+        fun setAsListenerTo(view: SurfaceView) {
+            view.holder.addCallback(this)
+            view.setOnTouchListener(this)
+            view.setOnHoverListener(this)
+            view.setOnGenericMotionListener(this)
+            view.setOnKeyListener(this)
+            surfaceChanged(view.holder, PixelFormat.UNKNOWN, view.width, view.height)
         }
 
-        public void onPointerButton(int button, int state) {
-            if (svc == null) return;
-            svc.pointerButton(button, state);
+        override fun onPointerButton(button: Int, state: Int) {
+            if (svc == null) return
+            svc!!.pointerButton(button, state)
         }
 
-        public void onPointerMotion(int x, int y) {
-            if (svc == null) return;
-            svc.pointerMotion(x, y);
+        override fun onPointerMotion(x: Int, y: Int) {
+            if (svc == null) return
+            svc!!.pointerMotion(x.toFloat(), y.toFloat())
         }
 
-        public void onPointerScroll(int axis, float value) {
-            if (svc == null) return;
-            svc.pointerScroll(axis, value);
+        override fun onPointerScroll(axis: Int, value: Float) {
+            if (svc == null) return
+            svc!!.pointerScroll(axis, value)
         }
 
-        public void onTouchDown(int id, float x, float y) {
-            if (svc == null) return;
-            svc.touchDown(id, x, y);
+        override fun onTouchDown(id: Int, x: Float, y: Float) {
+            if (svc == null) return
+            svc!!.touchDown(id, x, y)
         }
 
-        public void onTouchMotion(int id, float x, float y) {
-            if (svc == null) return;
-            svc.touchMotion(id, x, y);
+        override fun onTouchMotion(id: Int, x: Float, y: Float) {
+            if (svc == null) return
+            svc!!.touchMotion(id, x, y)
         }
 
-        public void onTouchUp(int id) {
-            if (svc == null) return;
-            svc.touchUp(id);
+        override fun onTouchUp(id: Int) {
+            if (svc == null) return
+            svc!!.touchUp(id)
         }
 
-        public void onTouchFrame() {
-            if (svc == null) return;
-            svc.touchFrame();
+        override fun onTouchFrame() {
+            if (svc == null) return
+            svc!!.touchFrame()
         }
 
-        @Override
-        public boolean onTouch(View v, MotionEvent e) {
-            if (svc == null) return false;
-            return svc.mTP.onTouchEvent(e);
+        override fun onTouch(v: View, e: MotionEvent): Boolean {
+            return if (svc == null) false else svc!!.mTP!!.onTouchEvent(e)
         }
 
-        @Override
-        public boolean onGenericMotion(View v, MotionEvent e) {
-            if (svc == null) return false;
-            return svc.mTP.onTouchEvent(e);
+        override fun onGenericMotion(v: View, e: MotionEvent): Boolean {
+            return if (svc == null) false else svc!!.mTP!!.onTouchEvent(e)
         }
 
-        @Override
-        public boolean onHover(View v, MotionEvent e) {
-            if (svc == null) return false;
-            return svc.mTP.onTouchEvent(e);
+        override fun onHover(v: View, e: MotionEvent): Boolean {
+            return if (svc == null) false else svc!!.mTP!!.onTouchEvent(e)
         }
 
-        private boolean isSource(KeyEvent e, int source) {
-            return (e.getSource() & source) == source;
+        private fun isSource(e: KeyEvent, source: Int): Boolean {
+            return e.source and source == source
         }
 
-        private boolean rightPressed = false; // Prevent right button press event from being repeated
-        private boolean middlePressed = false; // Prevent middle button press event from being repeated
-
-        @Override
-        public boolean onKey(View v, int keyCode, KeyEvent e) {
-            if (svc == null) return false;
-            int action = 0;
-
+        private var rightPressed = false // Prevent right button press event from being repeated
+        private var middlePressed = false // Prevent middle button press event from being repeated
+        override fun onKey(v: View, keyCode: Int, e: KeyEvent): Boolean {
+            if (svc == null) return false
+            var action = 0
             if (keyCode == KeyEvent.KEYCODE_BACK) {
-                if (
-                        isSource(e, InputDevice.SOURCE_MOUSE) &&
-                                rightPressed != (e.getAction() == KeyEvent.ACTION_DOWN)
+                if (isSource(e, InputDevice.SOURCE_MOUSE) &&
+                    rightPressed != (e.action == KeyEvent.ACTION_DOWN)
                 ) {
-                    svc.pointerButton(TouchParser.BTN_RIGHT, (e.getAction() == KeyEvent.ACTION_DOWN) ? TouchParser.ACTION_DOWN : TouchParser.ACTION_UP);
-                    rightPressed = (e.getAction() == KeyEvent.ACTION_DOWN);
-                } else if (e.getAction() == KeyEvent.ACTION_UP) {
-                    if (act.kbd != null) act.kbd.requestFocus();
-                    KeyboardUtils.toggleKeyboardVisibility(act);
+                    svc!!.pointerButton(
+                        TouchParser.BTN_RIGHT,
+                        if (e.action == KeyEvent.ACTION_DOWN) TouchParser.ACTION_DOWN else TouchParser.ACTION_UP
+                    )
+                    rightPressed = e.action == KeyEvent.ACTION_DOWN
+                } else if (e.action == KeyEvent.ACTION_UP) {
+                    if (act!!.kbd != null) act!!.kbd!!.requestFocus()
+                    KeyboardUtils.toggleKeyboardVisibility(act)
                 }
-                return true;
+                return true
             }
-
-            if (
-                    keyCode == KeyEvent.KEYCODE_MENU &&
-                            isSource(e, InputDevice.SOURCE_MOUSE) &&
-                            middlePressed != (e.getAction() == KeyEvent.ACTION_DOWN)
+            if (keyCode == KeyEvent.KEYCODE_MENU &&
+                isSource(
+                    e,
+                    InputDevice.SOURCE_MOUSE
+                ) && middlePressed != (e.action == KeyEvent.ACTION_DOWN)
             ) {
-                svc.pointerButton(TouchParser.BTN_MIDDLE, (e.getAction() == KeyEvent.ACTION_DOWN) ? TouchParser.ACTION_DOWN : TouchParser.ACTION_UP);
-                middlePressed = (e.getAction() == KeyEvent.ACTION_DOWN);
-                return true;
+                svc!!.pointerButton(
+                    TouchParser.BTN_MIDDLE,
+                    if (e.action == KeyEvent.ACTION_DOWN) TouchParser.ACTION_DOWN else TouchParser.ACTION_UP
+                )
+                middlePressed = e.action == KeyEvent.ACTION_DOWN
+                return true
             }
-
-            if (e.getAction() == KeyEvent.ACTION_DOWN) action = TouchParser.ACTION_DOWN;
-            if (e.getAction() == KeyEvent.ACTION_UP) action = TouchParser.ACTION_UP;
-            svc.keyboardKey(action, keyCode, e.isShiftPressed() ? 1 : 0, e.getCharacters());
-            return true;
+            if (e.action == KeyEvent.ACTION_DOWN) action = TouchParser.ACTION_DOWN
+            if (e.action == KeyEvent.ACTION_UP) action = TouchParser.ACTION_UP
+            svc!!.keyboardKey(action, keyCode, if (e.isShiftPressed) 1 else 0, e.characters)
+            return true
         }
 
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            DisplayMetrics dm = new DisplayMetrics();
-            int mmWidth, mmHeight;
-            act.getWindowManager().getDefaultDisplay().getMetrics(dm);
-
-            if (act.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-                mmWidth = (int) Math.round((width * 25.4) / dm.xdpi);
-                mmHeight = (int) Math.round((height * 25.4) / dm.ydpi);
+        override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+            val dm = DisplayMetrics()
+            val mmWidth: Int
+            val mmHeight: Int
+            act!!.windowManager.defaultDisplay.getMetrics(dm)
+            if (act!!.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                mmWidth = Math.round(width * 25.4 / dm.xdpi).toInt()
+                mmHeight = Math.round(height * 25.4 / dm.ydpi).toInt()
             } else {
-                mmWidth = (int) Math.round((width * 25.4) / dm.ydpi);
-                mmHeight = (int) Math.round((height * 25.4) / dm.xdpi);
+                mmWidth = Math.round(width * 25.4 / dm.ydpi).toInt()
+                mmHeight = Math.round(height * 25.4 / dm.xdpi).toInt()
             }
-
-            svc.windowChanged(holder.getSurface(), width, height, mmWidth, mmHeight);
+            svc!!.windowChanged(holder.surface, width, height, mmWidth, mmHeight)
         }
 
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
+        override fun surfaceCreated(holder: SurfaceHolder) {}
+        override fun surfaceDestroyed(holder: SurfaceHolder) {}
+    }
+
+    private fun windowChanged(s: Surface, w: Int, h: Int, pw: Int, ph: Int) {
+        windowChanged(compositor, s, w, h, pw, ph)
+    }
+
+    private external fun windowChanged(
+        compositor: Long,
+        surface: Surface,
+        width: Int,
+        height: Int,
+        mmWidth: Int,
+        mmHeight: Int
+    )
+
+    private fun touchDown(id: Int, x: Float, y: Float) {
+        touchDown(compositor, id, x.toInt(), y.toInt())
+    }
+
+    private external fun touchDown(compositor: Long, id: Int, x: Int, y: Int)
+    private fun touchMotion(id: Int, x: Float, y: Float) {
+        touchMotion(compositor, id, x.toInt(), y.toInt())
+    }
+
+    private external fun touchMotion(compositor: Long, id: Int, x: Int, y: Int)
+    private fun touchUp(id: Int) {
+        touchUp(compositor, id)
+    }
+
+    private external fun touchUp(compositor: Long, id: Int)
+    private external fun touchFrame(compositor: Long = this.compositor)
+    private fun pointerMotion(x: Float, y: Float) {
+        pointerMotion(compositor, x.toInt(), y.toInt())
+    }
+
+    private external fun pointerMotion(compositor: Long, x: Int, y: Int)
+    private fun pointerScroll(axis: Int, value: Float) {
+        pointerScroll(compositor, axis, value)
+    }
+
+    private external fun pointerScroll(compositor: Long, axis: Int, value: Float)
+    private fun pointerButton(button: Int, type: Int) {
+        pointerButton(compositor, button, type)
+    }
+
+    private external fun pointerButton(compositor: Long, button: Int, type: Int)
+    private fun keyboardKey(key: Int, type: Int, shift: Int, characters: String) {
+        keyboardKey(compositor, key, type, shift, characters)
+    }
+
+    private external fun keyboardKey(
+        compositor: Long,
+        key: Int,
+        type: Int,
+        shift: Int,
+        characters: String
+    )
+
+    private external fun createLorieThread(CustXdgpath: String?): Long
+    private external fun terminate(compositor: Long)
+
+    companion object {
+        const val ACTION_STOP_SERVICE = "com.termux.x11.service_stop"
+        const val ACTION_START_FROM_ACTIVITY = "com.termux.x11.start_from_activity"
+        const val ACTION_START_PREFERENCES_ACTIVITY = "com.termux.x11.start_preferences_activity"
+        const val ACTION_PREFERENCES_CHAGED = "com.termux.x11.preferences_changed"
+        private var instance: LorieService? = null
+        private val listener = ServiceEventListener()
+        private var act: MainActivity? = null
+        fun setMainActivity(activity: MainActivity?) {
+            act = activity
         }
 
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
+        @JvmStatic
+        fun start(action: String?) {
+            val intent = Intent(act, LorieService::class.java)
+            intent.action = action
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                act!!.startForegroundService(intent)
+            } else {
+                act!!.startService(intent)
+            }
         }
 
-    }
+        fun isServiceRunningInForeground(context: Context, serviceClass: Class<*>): Boolean {
+            val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+            for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+                if (serviceClass.name == service.service.className) {
+                    return service.foreground
+                }
+            }
+            return false
+        }
 
-    static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        private fun onPreferencesChanged() {
+            if (instance == null || act == null) return
+            val preferences = PreferenceManager.getDefaultSharedPreferences(instance)
+            val mode = preferences.getString("touchMode", "1")!!.toInt()
+            instance!!.mTP!!.setMode(mode)
+            Log.e("LorieService", "Preferences changed")
+        }
+
+        fun getInstance(): LorieService? {
+            if (instance == null) {
+                Log.e("LorieService", "Instance was requested, but no instances available")
+            }
+            return instance
+        }
+
+        val onKeyListener: View.OnKeyListener
+            get() = listener
+
+        fun sleep(millis: Long) {
+            try {
+                Thread.sleep(millis)
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }
+
+        init {
+            System.loadLibrary("lorie")
         }
     }
 
-    private void windowChanged(Surface s, int w, int h, int pw, int ph) {
-        windowChanged(compositor, s, w, h, pw, ph);
-    }
-
-    private native void windowChanged(long compositor, Surface surface, int width, int height, int mmWidth, int mmHeight);
-
-    private void touchDown(int id, float x, float y) {
-        touchDown(compositor, id, (int) x, (int) y);
-    }
-
-    private native void touchDown(long compositor, int id, int x, int y);
-
-    private void touchMotion(int id, float x, float y) {
-        touchMotion(compositor, id, (int) x, (int) y);
-    }
-
-    private native void touchMotion(long compositor, int id, int x, int y);
-
-    private void touchUp(int id) {
-        touchUp(compositor, id);
-    }
-
-    private native void touchUp(long compositor, int id);
-
-    private void touchFrame() {
-        touchFrame(compositor);
-    }
-
-    private native void touchFrame(long compositor);
-
-    private void pointerMotion(float x, float y) {
-        pointerMotion(compositor, (int) x, (int) y);
-    }
-
-    private native void pointerMotion(long compositor, int x, int y);
-
-    private void pointerScroll(int axis, float value) {
-        pointerScroll(compositor, axis, value);
-    }
-
-    private native void pointerScroll(long compositor, int axis, float value);
-
-    private void pointerButton(int button, int type) {
-        pointerButton(compositor, button, type);
-    }
-
-    private native void pointerButton(long compositor, int button, int type);
-
-    private void keyboardKey(int key, int type, int shift, String characters) {
-        keyboardKey(compositor, key, type, shift, characters);
-    }
-
-    private native void keyboardKey(long compositor, int key, int type, int shift, String characters);
-
-    private native long createLorieThread(String CustXdgpath);
-
-    private native void terminate(long compositor);
-
-    static {
-        System.loadLibrary("lorie");
+    init {
+        instance = this
     }
 }

@@ -40,16 +40,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val inited = preferences.getBoolean(Constant.VRCODE_INITED_KEY, false)
+        val inited = Constant.VRCODE_INIT_FILE.exists()
 
         if (!inited) {
             setContentView(R.layout.main_activity)
 
             fun setInited() {
-                preferences.edit().apply {
-                    putBoolean(Constant.VRCODE_INITED_KEY, true)
-                    apply()
-                }
+                Constant.VRCODE_INIT_FILE.writeText("true")
             }
 
             fun installChosenSoftware(deChosenID: Int, toolChosenIDs: MutableList<Int>) {
@@ -170,17 +167,17 @@ class MainActivity : AppCompatActivity() {
     fun onLorieServiceStart(instance: LorieService) {
         val lorieView = findViewById<SurfaceView>(R.id.lorieView)
         instance.setListeners(lorieView)
-        kbd?.reload(keys, lorieView, LorieService.getOnKeyListener())
-
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val desktopEnvType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
-            ?: throw Exception("Desktop Env not found")
-
-        Handler().postDelayed({
-            val intent = Intent(this, DesktopEnvService::class.java)
-            intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopEnvType)
-            startService(intent)
-        }, 500)
+        kbd?.reload(keys, lorieView, LorieService.onKeyListener)
+//
+//        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+//        val desktopEnvType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
+//            ?: throw Exception("Desktop Env not found")
+//
+//        Handler().postDelayed({
+//            val intent = Intent(this, DesktopEnvService::class.java)
+//            intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopEnvType)
+//            startService(intent)
+//        }, 500)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

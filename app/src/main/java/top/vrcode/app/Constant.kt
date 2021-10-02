@@ -1,5 +1,8 @@
 package top.vrcode.app
 
+import com.termux.shared.termux.TermuxConstants
+import java.io.File
+
 object Constant {
     const val LATEST_MODIFIED_TERMUX_APP_URL =
         "https://github.com/VRCodeProject/termux-app/releases/download/20210922T145352/termux-app-arm64-v8a-release.apk" // FIXME: should update automatically
@@ -8,6 +11,7 @@ object Constant {
     const val VRCODE_FILE_PROVIDER_AUTHORITIES = "top.vrcode.app.fileprovider"
 
     const val VRCODE_INITED_KEY = "inited"
+    val VRCODE_INIT_FILE = File("${TermuxConstants.TERMUX_ETC_PREFIX_DIR_PATH}/vrcode.inited")
 
     const val X11_INSTALL_SCRIPT =
         "pkg install -y x11-repo -y && apt --yes --force-yes update && apt --yes --force-yes install xwayland"
@@ -31,10 +35,6 @@ object Constant {
     )
     val AVAILABLE_TOOLS = TOOLS_INSTALL_SCRIPTS.keys.toTypedArray()
 
-    const val XFCE_SESSION_SCRIPT = "xfce_session.sh"
-
-    const val DESKTOP_SESSION_NOTIFICATION_KEY = "desktop_id"
-    const val DESKTOP_SESSION_NOTIFICATION_ID = 2021
-
-    const val DESKTOP_TYPE_INTENT_KEY = "desktop_type"
+    val XWAYLAND_ENVS =
+        arrayOf("DISPLAY=:1", "XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp")
 }
