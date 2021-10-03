@@ -22,7 +22,6 @@ refs() {
 
   sudo sh -c 'echo "deb [arch=amd64,arm64,armhf trusted=yes] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
 
-
   sudo apt install apt-transport-https -y
   sudo apt update -y
   sudo apt install code -y
@@ -41,6 +40,12 @@ sound() {
   echo "pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" >>"$HOME"/.bashrc
 }
 
+addUser() {
+  echo "user ALL=(ALL:ALL) ALL" >>/etc/sudoers
+  adduser --disabled-password user
+}
+
 sound
 package2
 refs
+addUser
