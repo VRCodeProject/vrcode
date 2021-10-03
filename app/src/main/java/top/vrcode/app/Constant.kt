@@ -16,24 +16,12 @@ object Constant {
     const val X11_INSTALL_SCRIPT =
         "pkg install -y x11-repo -y && apt --yes --force-yes update && apt --yes --force-yes install xwayland"
 
-    const val SCRIPT_IN_ASSET = "assets/" // If script is located in assets
-
     // Desktop environment vars
-    val DESKTOP_ENV_INSTALL_SCRIPTS = mapOf(
-        "Xfce" to "apt --yes --force-yes install xfce"
-    )
-    val DESKTOP_ENV_STARTUP_SCRIPTS = mapOf(
-        "Xfce" to "xfce_session.sh"
-    )
-    val AVAILABLE_DESKTOP_ENVS = arrayOf("Xfce")
+    const val LINUX_ENV_INSTALL_SCRIPT = "linux_install.sh"
+    const val LINUX_ENV_INTERNAL_INSTALL_SCRIPT = "linux_internal_install.sh"
+    const val LINUX_ENV_STARTUP_SCRIPT = "linux_startup.sh"
 
-    const val CHOSEN_DESKTOP_ENV_KEY = "desktopEnv"
-
-    val TOOLS_INSTALL_SCRIPTS = mapOf<String, String>(
-        "VS Code" to "${SCRIPT_IN_ASSET}vscode.sh",
-        "Golang" to "pkg install golang -y"
-    )
-    val AVAILABLE_TOOLS = TOOLS_INSTALL_SCRIPTS.keys.toTypedArray()
+    const val LINUX_INSTALL_SCRIPT_INTERNAL_SCRIPT_PLACEHOLDER = "SCRIPT_PLACEHOLDER"
 
     val XWAYLAND_ENVS =
         arrayOf("DISPLAY=:1", "XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp")

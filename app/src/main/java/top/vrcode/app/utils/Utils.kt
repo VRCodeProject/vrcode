@@ -28,6 +28,13 @@ object Utils {
         }, 100)
     }
 
+    fun getAssetScript(name: String, application: Application): String {
+        val script = application.assets.open(name).bufferedReader().use {
+            it.readText()
+        }
+        return script
+    }
+
     fun checkGraphicalSupport(): Boolean {
         return checkXWaylandInstallation()
     }
@@ -56,6 +63,7 @@ object Utils {
         var executionCommand: ExecutionCommand
         lateinit var file: File
         lateinit var filename: String
+        lateinit var plainFilename: String
 
 
         init {
@@ -73,7 +81,9 @@ object Utils {
         private fun getNextCommandID() = COMMAND_ID++
 
         private fun saveTempScript(s: String): Array<String> {
-            filename = "${TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH}/${md5(s).toHex()}.sh"
+            plainFilename = "${md5(s).toHex()}.sh"
+            filename = "${TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH}/$plainFilename"
+
             file = File(filename)
 
             if (!file.exists()) {

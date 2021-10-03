@@ -19,9 +19,11 @@
     <string name="install_x_wayland_dialog_toast">Session is running, cannot cancel.</string>
 
     <!--    init dialog strings    -->
-    <string name="de_chooser_dialog_title">Choose Desktop Environment</string>
-    <string name="tools_chooser_dialog_title">Choose Tools</string>
-    <string name="run_install_chosen">"Install Chosen Software"</string>
+    <!--    <string name="de_chooser_dialog_title">Choose Desktop Environment</string>-->
+    <!--    <string name="tools_chooser_dialog_title">Choose Tools</string>-->
+    <!--    <string name="run_install_chosen">"Install Chosen Software"</string>-->
+    <string name="install_username_dialog_title">Input username for Linux</string>
+    <string name="install_linux_dialog_title">Setup Linux Environment</string>
 
     <string name="desktop_notification_name">Desktop Service</string>
     <string name="desktop_notification_content">Desktop Service is running</string>

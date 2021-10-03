@@ -5,11 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.FrameLayout
 import android.os.Bundle
 import android.content.res.Configuration
-import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import com.termux.shared.termux.TermuxUtils
 import top.vrcode.app.components.TerminalDialog
@@ -22,6 +22,17 @@ class MainActivity : AppCompatActivity() {
     var kbd: AdditionalKeyboardView? = null
     private var frm: FrameLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
+//        if (BuildConfig.DEBUG) {
+//            val name = Utils.BashScript(
+//                Utils.getAssetScript(
+//                    Constant.LINUX_ENV_INTERNAL_INSTALL_SCRIPT,
+//                    application
+//                )
+//            )
+//            Log.d("Script Name", name.filename)
+//        }
+
+
         super.onCreate(savedInstanceState)
 
         val termuxErr = TermuxUtils.isTermuxAppAccessible(applicationContext)
@@ -39,7 +50,6 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val inited = Constant.VRCODE_INIT_FILE.exists()
 
         if (!inited) {
@@ -49,37 +59,21 @@ class MainActivity : AppCompatActivity() {
                 Constant.VRCODE_INIT_FILE.writeText("true")
             }
 
-            fun installChosenSoftware(deChosenID: Int, toolChosenIDs: MutableList<Int>) {
-                preferences.edit().apply {
-                    putString(
-                        Constant.CHOSEN_DESKTOP_ENV_KEY,
-                        Constant.AVAILABLE_DESKTOP_ENVS[deChosenID]
-                    )
-                    apply()
-                }
+            fun setupLinux() {
+                var installScriptString =
+                    Utils.getAssetScript(Constant.LINUX_ENV_INSTALL_SCRIPT, application)
+                val internalInstallScriptString =
+                    Utils.getAssetScript(Constant.LINUX_ENV_INTERNAL_INSTALL_SCRIPT, application)
 
-                var execScript = ""
-                execScript += Constant.DESKTOP_ENV_INSTALL_SCRIPTS[Constant.AVAILABLE_DESKTOP_ENVS[deChosenID]] + "\n"
-                for (id in toolChosenIDs) {
-                    val scriptOrName = Constant.TOOLS_INSTALL_SCRIPTS[Constant.AVAILABLE_TOOLS[id]]
-                    if (scriptOrName != null) {
-                        var realScript: String
-                        if (scriptOrName.startsWith(Constant.SCRIPT_IN_ASSET)) {
-                            realScript =
-                                application.assets.open(scriptOrName.substring(Constant.SCRIPT_IN_ASSET.length))
-                                    .bufferedReader().use {
-                                        it.readText()
-                                    }
-                        } else {
-                            realScript = scriptOrName
-                        }
-                        execScript += realScript + "\n"
-                    }
-                }
-                val bashScript = Utils.BashScript(execScript)
+                val internalInstallScript = Utils.BashScript(internalInstallScriptString)
+                installScriptString = installScriptString.replace(
+                    Constant.LINUX_INSTALL_SCRIPT_INTERNAL_SCRIPT_PLACEHOLDER,
+                    internalInstallScript.plainFilename
+                )
+                val installScript = Utils.BashScript(installScriptString)
                 TerminalDialog(this)
                     .execute(
-                        bashScript.get()
+                        installScript.get()
                     ).setPositiveButtonCallback { terminalDialog, terminalSession ->
                         run {
                             Log.d("TerminalCheck", terminalSession?.isRunning.toString())
@@ -89,47 +83,10 @@ class MainActivity : AppCompatActivity() {
                                 Utils.reborn(application)
                             }
                         }
-                    }.show(getString(R.string.run_install_chosen))
+                    }.show(getString(R.string.install_linux_dialog_title))
             }
 
-            var deChosenID = 0;
-            val toolChosenIDs = mutableListOf<Int>()
-
-            val toolChooser = AlertDialog.Builder(this)
-                .setTitle(getString(R.string.tools_chooser_dialog_title))
-                .setMultiChoiceItems(Constant.AVAILABLE_TOOLS, null) { _, which, isChecked ->
-                    run {
-                        if (isChecked) {
-                            toolChosenIDs.add(which)
-                        } else {
-                            toolChosenIDs.remove(which)
-                        }
-                    }
-                }
-                .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
-                    run {
-                        dialog.dismiss()
-                        installChosenSoftware(deChosenID, toolChosenIDs)
-                    }
-                }
-                .create()
-            toolChooser.setCanceledOnTouchOutside(false)
-
-            val deChooser = AlertDialog.Builder(this)
-                .setTitle(getString(R.string.de_chooser_dialog_title))
-                .setSingleChoiceItems(
-                    Constant.AVAILABLE_DESKTOP_ENVS,
-                    deChosenID
-                ) { _, which -> deChosenID = which }
-                .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
-                    run {
-                        dialog.dismiss()
-                        toolChooser.show()
-                    }
-                }
-                .create()
-            deChooser.setCanceledOnTouchOutside(false)
-            deChooser.show()
+            setupLinux()
         } else {
             LorieService.setMainActivity(this)
             LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
@@ -147,6 +104,20 @@ class MainActivity : AppCompatActivity() {
             window.decorView.pointerIcon =
                 PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
 
+            val scriptString = Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
+            val bashScript = Utils.BashScript(scriptString, true)
+
+            TerminalDialog(this)
+                .execute(
+                    bashScript.get()
+                ).setPositiveButtonCallback { terminalDialog, terminalSession ->
+                    run {
+                        Log.d("TerminalCheck", terminalSession?.isRunning.toString())
+                        if ((terminalSession?.isRunning != true)) {
+                            terminalDialog.dismiss()
+                        }
+                    }
+                }.show("Test Service")
         }
     }
 
@@ -168,16 +139,6 @@ class MainActivity : AppCompatActivity() {
         val lorieView = findViewById<SurfaceView>(R.id.lorieView)
         instance.setListeners(lorieView)
         kbd?.reload(keys, lorieView, LorieService.onKeyListener)
-//
-//        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-//        val desktopEnvType = preferences.getString(Constant.CHOSEN_DESKTOP_ENV_KEY, null)
-//            ?: throw Exception("Desktop Env not found")
-//
-//        Handler().postDelayed({
-//            val intent = Intent(this, DesktopEnvService::class.java)
-//            intent.putExtra(Constant.DESKTOP_TYPE_INTENT_KEY, desktopEnvType)
-//            startService(intent)
-//        }, 500)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
