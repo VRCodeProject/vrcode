@@ -49,7 +49,6 @@ cc_library_static {
     cflags: [
         "-std=c99",
         "-Wall",
-        "-Werror",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
         "-DXLOCALEDIR=\"/usr/share/X11/locale\"",
