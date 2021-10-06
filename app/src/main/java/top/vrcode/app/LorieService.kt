@@ -99,46 +99,46 @@ class LorieService : Service() {
         }
 
         // Setup Desktop Environment
+//        return
+        val scriptString = Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
+        val bashScript = Utils.BashScript(scriptString, true)
+        val client = object : TermuxTerminalSessionClientBase() {
+            override fun onTextChanged(changedSession: TerminalSession?) {
+                Log.d("Session", changedSession?.isRunning.toString())
+            }
 
-//        val scriptString = Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
-//        val bashScript = Utils.BashScript(scriptString, true)
-//        val client = object : TermuxTerminalSessionClientBase() {
-//            override fun onTextChanged(changedSession: TerminalSession?) {
-//                Log.d("Session", changedSession?.isRunning.toString())
-//            }
-//
-//            override fun onSessionFinished(finishedSession: TerminalSession?) {
-//                Log.d("Session", "session dead")
-//            }
-//        }
-//        val environment = object : TermuxShellEnvironmentClient() {
-//            override fun buildEnvironment(
-//                currentPackageContext: Context?,
-//                isFailSafe: Boolean,
-//                workingDirectory: String?
-//            ): Array<String> {
-//                val list = super.buildEnvironment(
-//                    currentPackageContext,
-//                    isFailSafe,
-//                    workingDirectory
-//                ).toMutableList()
-//                Constant.XWAYLAND_ENVS.forEach {
-//                    list.add(it)
-//                }
-//                return list.toTypedArray()
-//            }
-//        }
-//        // Log.d("Service", "Start Desktop 2")
-//        session = TermuxSession.execute(
-//            this,
-//            bashScript.get(),
-//            client,
-//            null,
-//            environment,
-//            "desktop",
-//            true
-//        )
-//        session!!.terminalSession.initializeEmulator(1, 1)
+            override fun onSessionFinished(finishedSession: TerminalSession?) {
+                Log.d("Session", "session dead")
+            }
+        }
+        val environment = object : TermuxShellEnvironmentClient() {
+            override fun buildEnvironment(
+                currentPackageContext: Context?,
+                isFailSafe: Boolean,
+                workingDirectory: String?
+            ): Array<String> {
+                val list = super.buildEnvironment(
+                    currentPackageContext,
+                    isFailSafe,
+                    workingDirectory
+                ).toMutableList()
+                Constant.XWAYLAND_ENVS.forEach {
+                    list.add(it)
+                }
+                return list.toTypedArray()
+            }
+        }
+        // Log.d("Service", "Start Desktop 2")
+        session = TermuxSession.execute(
+            this,
+            bashScript.get(),
+            client,
+            null,
+            environment,
+            "desktop",
+            true
+        )
+        session!!.terminalSession.initializeEmulator(1, 1)
         // TODO: Here's another fucking trick, it set size to 1,1 and start execute command.
         // With this, there's no need to call JNI function manually.
     }

@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.FrameLayout
 import android.os.Bundle
 import android.content.res.Configuration
+import android.os.Handler
+import android.os.Looper
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.*
@@ -22,17 +24,6 @@ class MainActivity : AppCompatActivity() {
     var kbd: AdditionalKeyboardView? = null
     private var frm: FrameLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
-//        if (BuildConfig.DEBUG) {
-//            val name = Utils.BashScript(
-//                Utils.getAssetScript(
-//                    Constant.LINUX_ENV_INTERNAL_INSTALL_SCRIPT,
-//                    application
-//                )
-//            )
-//            Log.d("Script Name", name.filename)
-//        }
-
-
         super.onCreate(savedInstanceState)
 
         val termuxErr = TermuxUtils.isTermuxAppAccessible(applicationContext)
@@ -80,6 +71,7 @@ class MainActivity : AppCompatActivity() {
                             if ((terminalSession?.isRunning != true)) {
                                 terminalDialog.dismiss()
                                 setInited()
+                                finish()
                                 Utils.reborn(application)
                             }
                         }
@@ -104,20 +96,23 @@ class MainActivity : AppCompatActivity() {
             window.decorView.pointerIcon =
                 PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
 
-            val scriptString = Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
-            val bashScript = Utils.BashScript(scriptString, true)
-
-            TerminalDialog(this)
-                .execute(
-                    bashScript.get()
-                ).setPositiveButtonCallback { terminalDialog, terminalSession ->
-                    run {
-                        Log.d("TerminalCheck", terminalSession?.isRunning.toString())
-                        if ((terminalSession?.isRunning != true)) {
-                            terminalDialog.dismiss()
-                        }
-                    }
-                }.show("Test Service")
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                val scriptString =
+//                    Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
+//                val bashScript = Utils.BashScript(scriptString, true)
+//
+//                TerminalDialog(this)
+//                    .execute(
+//                        bashScript.get()
+//                    ).setPositiveButtonCallback { terminalDialog, terminalSession ->
+//                        run {
+//                            Log.d("TerminalCheck", terminalSession?.isRunning.toString())
+//                            if ((terminalSession?.isRunning != true)) {
+//                                terminalDialog.dismiss()
+//                            }
+//                        }
+//                    }.show("Test Service")
+//            }, 1000)
         }
     }
 

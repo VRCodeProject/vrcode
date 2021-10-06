@@ -15,6 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+exit() {
+  echo "Fake exit   in debug"
+}
+
 R="$(printf '\033[1;31m')"
 G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
@@ -29,7 +33,8 @@ banner() {
 }
 
 package() {
-  apt --yes --force-yes update  && apt --yes --force-yes upgrade
+  apt --yes update
+  apt --yes -o Dpkg::Options::="--force-confold" --allow-downgrades --allow-remove-essential --allow-change-held-packages upgrade
   apt install git wget -y
 
   echo -e "${R} [${W}-${R}]${C} Checking required packages...""${W}"
@@ -102,9 +107,9 @@ login() {
 banner
 package
 distro
-sound
 permission
 login
 uname -a
 proot-distro login --shared-tmp ubuntu -- bash /tmp/SCRIPT_PLACEHOLDER
-# This works as a trick, if you change linux_internal_install.sh, you should also update this hash
+# This works as a trick, SCRIPT_PLACEHOLEDER will be replaced at runtime.
+# You can find reference to this at Constants.kt

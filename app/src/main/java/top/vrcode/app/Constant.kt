@@ -24,5 +24,5 @@ object Constant {
     const val LINUX_INSTALL_SCRIPT_INTERNAL_SCRIPT_PLACEHOLDER = "SCRIPT_PLACEHOLDER"
 
     val XWAYLAND_ENVS =
-        arrayOf("DISPLAY=:1", "XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp")
+        arrayOf("XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp")
 }
