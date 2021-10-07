@@ -35,7 +35,7 @@ LOCAL_SRC_FILES := \
 	xkbcommon/src/utf8.c \
 	xkbcommon/src/utils.c
 LOCAL_CFLAGS := \
-	-std=c99 -Wall -Werror -Wno-unused-parameter -Wno-missing-field-initializers -Wimplicit-function-declaration \
+	-std=c99 -Wno-unused-parameter -Wno-missing-field-initializers -Wimplicit-function-declaration \
 	-D_GNU_SOURCE \
 	-DXLOCALEDIR=\"/data/data/com.termux/files/usr/share/X11/locale\" \
 	-DDEFAULT_XKB_LAYOUT=\"us\" \
