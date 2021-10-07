@@ -283,7 +283,7 @@ class LorieService : Service() {
                     rightPressed = e.action == KeyEvent.ACTION_DOWN
                 } else if (e.action == KeyEvent.ACTION_UP) {
                     if (act!!.kbd != null) act!!.kbd!!.requestFocus()
-                    KeyboardUtils.toggleKeyboardVisibility(act)
+                    KeyboardUtils.toggleKeyboardVisibility(act!!)
                 }
                 return true
             }

@@ -6,6 +6,8 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,7 +50,7 @@ public class LoriePreferences extends AppCompatActivity implements SharedPrefere
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
         if (id == android.R.id.home) {
@@ -91,7 +93,7 @@ public class LoriePreferences extends AppCompatActivity implements SharedPrefere
         }
 
         @Override
-        public boolean onPreferenceChange(Preference preference, Object newValue) {
+        public boolean onPreferenceChange(@NonNull Preference preference, @NonNull Object newValue) {
             String key = preference.getKey();
             Log.e("Preferences", "changed preference: " + key);
             if (key.equals("showIMEWhileExternalConnected")) {

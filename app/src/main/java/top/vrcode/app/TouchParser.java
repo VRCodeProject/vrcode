@@ -27,6 +27,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 
+import androidx.annotation.NonNull;
+
 @SuppressWarnings("unused")
 public class TouchParser {
 
@@ -81,8 +83,10 @@ public class TouchParser {
     private static final int RIGHT_TAP = 4;
     private static final int TOUCH_FRAME = 5;
 
+    @NonNull
     private final Handler mHandler;
     private final OnTouchParseListener mListener;
+    @NonNull
     private final HardwareMouseListener hmListener;
 
     private boolean mStillDown;
@@ -117,12 +121,12 @@ public class TouchParser {
             super();
         }
 
-        GestureHandler(Handler handler) {
+        GestureHandler(@NonNull Handler handler) {
             super(handler.getLooper());
         }
 
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
                 case SHOW_PRESS:
                     break;
@@ -204,7 +208,7 @@ public class TouchParser {
         return mIsLongpressEnabled;
     }
 
-    boolean onTouchEvent(MotionEvent ev) {
+    boolean onTouchEvent(@NonNull MotionEvent ev) {
         if ((ev.getSource() & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) {
             return hmListener.onTouch(ev);
         }
@@ -405,7 +409,7 @@ public class TouchParser {
         return handled;
     }
 
-    private void onScroll(MotionEvent ev, float scrollX, float scrollY) {
+    private void onScroll(@NonNull MotionEvent ev, float scrollX, float scrollY) {
         if (ev.getPointerCount() == 1) {
             if (mMode == TOUCH_MODE_MOUSE) {
                 if (!mWasInDrag) {
@@ -476,8 +480,8 @@ public class TouchParser {
         mInContextClick = false;
     }
 
-    private boolean isConsideredDoubleTap(MotionEvent firstDown, MotionEvent firstUp,
-                                          MotionEvent secondDown) {
+    private boolean isConsideredDoubleTap(@NonNull MotionEvent firstDown, @NonNull MotionEvent firstUp,
+                                          @NonNull MotionEvent secondDown) {
         if (!mAlwaysInBiggerTapRegion) {
             return false;
         }
@@ -518,7 +522,7 @@ public class TouchParser {
         }
 
         @SuppressLint("ClickableViewAccessibility")
-        boolean onTouch(MotionEvent e) {
+        boolean onTouch(@NonNull MotionEvent e) {
             if (e.getAction() == MotionEvent.ACTION_SCROLL) {
                 float scrollY = -5 * e.getAxisValue(MotionEvent.AXIS_VSCROLL);
                 float scrollX = -5 * e.getAxisValue(MotionEvent.AXIS_HSCROLL);

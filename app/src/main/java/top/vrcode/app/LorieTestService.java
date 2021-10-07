@@ -9,16 +9,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 public class LorieTestService extends Service {
+    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
 
-    static void start(Context context) {
+    static void start(@NonNull Context context) {
         Intent intent = new Intent(context, LorieTestService.class);
         intent.setAction("start");
 
@@ -56,7 +60,7 @@ public class LorieTestService extends Service {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private String getNotificationChannel(NotificationManager notificationManager){
+    private String getNotificationChannel(@NonNull NotificationManager notificationManager){
         String channelId = getResources().getString(R.string.app_name);
         String channelName = getResources().getString(R.string.app_name);
         NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH);

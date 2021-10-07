@@ -73,6 +73,7 @@ dependencies {
 
     implementation 'com.github.termux.termux-app:termux-shared:dcedf39434'
     implementation 'com.github.termux.termux-app:terminal-view:dcedf39434'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
 
     implementation 'com.google.android.material:material:1.4.0'
 

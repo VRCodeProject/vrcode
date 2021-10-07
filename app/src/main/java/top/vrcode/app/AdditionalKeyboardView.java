@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.preference.PreferenceManager;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -27,21 +30,23 @@ public class AdditionalKeyboardView extends HorizontalScrollView implements View
 
     private boolean softKbdVisible;
     private Context ctx;
+    @Nullable
     private View targetView = null;
+    @Nullable
     private OnKeyListener targetListener = null;
     private int density;
     private LinearLayout root;
-    public AdditionalKeyboardView(Context context) {
+    public AdditionalKeyboardView(@NonNull Context context) {
         super(context);
         init(context);
     }
-    public AdditionalKeyboardView(Context context, AttributeSet attrs) {
+    public AdditionalKeyboardView(@NonNull Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
     @SuppressLint("SetTextI18n")
-    private void init(Context context) {
+    private void init(@NonNull Context context) {
         ctx = context;
         density = (int) context.getResources().getDisplayMetrics().density;
 
@@ -72,7 +77,7 @@ public class AdditionalKeyboardView extends HorizontalScrollView implements View
 	}
     }
 
-    public void reload(int[] keys, View TargetView, OnKeyListener TargetListener) {
+    public void reload(@NonNull int[] keys, View TargetView, OnKeyListener TargetListener) {
         targetView = TargetView;
         targetListener = TargetListener;
         root.removeAllViews();
@@ -127,7 +132,7 @@ public class AdditionalKeyboardView extends HorizontalScrollView implements View
         boolean toggle;
         boolean checked = false;
         int kc;
-        public Key(Context context, int keyCode) {
+        public Key(@NonNull Context context, int keyCode) {
             super(context);
             kc = keyCode;
             switch (keyCode) {
@@ -173,7 +178,7 @@ public class AdditionalKeyboardView extends HorizontalScrollView implements View
 
         private Rect rect;
         @Override
-        public boolean onTouch(View v, MotionEvent e) {
+        public boolean onTouch(View v, @NonNull MotionEvent e) {
             switch(e.getAction()) {
                 case MotionEvent.ACTION_BUTTON_PRESS:
                 case MotionEvent.ACTION_POINTER_DOWN:

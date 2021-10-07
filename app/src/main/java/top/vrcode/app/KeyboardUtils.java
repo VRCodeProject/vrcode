@@ -8,6 +8,9 @@ import android.view.ViewTreeObserver;
 import android.content.Context;
 import android.view.inputmethod.InputMethodManager;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.util.HashMap;
 
 /**
@@ -19,8 +22,10 @@ public class KeyboardUtils implements ViewTreeObserver.OnGlobalLayoutListener
 {
     private final static int MAGIC_NUMBER = 200;
 
+    @Nullable
     private SoftKeyboardToggleListener mCallback;
     private final View mRootView;
+    @Nullable
     private Boolean prevValue = null;
     private final float mScreenDensity;
     private static final HashMap<SoftKeyboardToggleListener, KeyboardUtils> sListenerMap = new HashMap<>();
@@ -52,7 +57,7 @@ public class KeyboardUtils implements ViewTreeObserver.OnGlobalLayoutListener
      * @param act calling activity
      * @param listener callback
      */
-    public static void addKeyboardToggleListener(Activity act, SoftKeyboardToggleListener listener)
+    public static void addKeyboardToggleListener(@NonNull Activity act, SoftKeyboardToggleListener listener)
     {
         removeKeyboardToggleListener(listener);
 
@@ -89,7 +94,7 @@ public class KeyboardUtils implements ViewTreeObserver.OnGlobalLayoutListener
      * Manually toggle soft keyboard visibility
      * @param context calling context
      */
-    public static void toggleKeyboardVisibility(Context context)
+    public static void toggleKeyboardVisibility(@NonNull Context context)
     {
         InputMethodManager inputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
         if(inputMethodManager != null)
@@ -100,7 +105,7 @@ public class KeyboardUtils implements ViewTreeObserver.OnGlobalLayoutListener
      * Force closes the soft keyboard
      * @param activeView the view with the keyboard focus
      */
-    public void forceCloseKeyboard(View activeView)
+    public void forceCloseKeyboard(@NonNull View activeView)
     {
         InputMethodManager inputMethodManager = (InputMethodManager) activeView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if(inputMethodManager != null) {
@@ -115,7 +120,7 @@ public class KeyboardUtils implements ViewTreeObserver.OnGlobalLayoutListener
         mRootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
     }
 
-    private KeyboardUtils(Activity act, SoftKeyboardToggleListener listener)
+    private KeyboardUtils(@NonNull Activity act, SoftKeyboardToggleListener listener)
     {
         mCallback = listener;
 
