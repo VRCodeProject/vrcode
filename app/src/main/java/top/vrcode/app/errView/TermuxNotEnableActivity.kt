@@ -21,6 +21,7 @@ import android.widget.Toast
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import top.vrcode.app.utils.Utils
 import top.vrcode.app.utils.Utils.setPermission
@@ -108,24 +109,27 @@ class TermuxNotEnableActivity : AppCompatActivity() {
                     progressDialog!!.progress = downloadProgress
                 }
                 DownloadManager.STATUS_SUCCESSFUL -> {
-                    progressDialog!!.dismiss()
                     mFuture?.run {
                         if (!isCancelled) cancel(true)
                     }
-                    installApk()
+                    progressDialog!!.dismiss()
                     cursor.close()
+                    Handler(Looper.getMainLooper()).postDelayed(
+                        { installApk() }, 500)
+
                 }
                 DownloadManager.STATUS_FAILED -> {
-                    progressDialog!!.dismiss()
                     mFuture?.run {
                         if (!isCancelled) cancel(true)
                     }
+                    progressDialog!!.dismiss()
+                    cursor.close()
                     Toast.makeText(
                         applicationContext,
                         getString(R.string.download_failed),
                         Toast.LENGTH_SHORT
                     ).show()
-                    cursor.close()
+
                 }
             }
         }
@@ -158,7 +162,6 @@ class TermuxNotEnableActivity : AppCompatActivity() {
             checkStatus()
         }, 300, 300, TimeUnit.MILLISECONDS)
     }
-
 
 
     private fun installApk(file: File = downloadPath!!) {

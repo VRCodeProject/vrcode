@@ -93,8 +93,8 @@ class MainActivity : AppCompatActivity() {
             kbd = findViewById(R.id.additionalKbd)
             frm = findViewById(R.id.frame)
 
-            window.decorView.pointerIcon =
-                PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
+//            window.decorView.pointerIcon =
+//                PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
 
 //            Handler(Looper.getMainLooper()).postDelayed({
 //                val scriptString =

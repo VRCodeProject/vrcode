@@ -13,6 +13,7 @@ package2() {
   apt-get clean
 }
 
+# shellcheck disable=SC2120
 installCode() {
   apt-get update -y
   apt-get upgrade -y
@@ -26,8 +27,13 @@ installCode() {
   apt update -y
   apt install code -y
 
-  sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/aarch64-linux-gnu/libxcb.so.1 # trickky
-  sed -i 's/"$@"/--no-sandbox "$@"' # trickky FIXME: later fix this
+  sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/aarch64-linux-gnu/libxcb.so.1 # tricky
+  mv /usr/share/code/code /usr/share/code.real
+  cat>/usr/share/code/code<<EOF
+#!/usr/bin/env sh
+/usr/share/code.real --no-sandbox "$@"
+EOF
+  #Another tricky
 
   apt autoremove -y
 
