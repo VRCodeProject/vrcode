@@ -24,6 +24,10 @@ jobs:
           distribution: 'adopt'
           cache: gradle
 
+      - name: set up dependencies
+        run: |
+          apt install libwayland-server0
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
