@@ -99,7 +99,6 @@ class LorieService : Service() {
         }
 
         // Setup Desktop Environment
-//        return
         val scriptString = Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
         val bashScript = Utils.BashScript(scriptString, true)
         val client = object : TermuxTerminalSessionClientBase() {

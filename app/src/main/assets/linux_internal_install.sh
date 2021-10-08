@@ -19,22 +19,17 @@ installCode() {
   apt-get upgrade -y
   apt-get install ca-certificates -y
   apt autoremove -y
-  echo -e "${R} [${W}-${R}]${C} Installing Visual Studio Code...""${W}"
-
-  sh -c 'echo "deb [arch=amd64,arm64,armhf trusted=yes] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
-
-  apt install apt-transport-https -y
-  apt update -y
-  apt install code -y
+  wget "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-arm64" -O code.deb
+  apt install "./code.deb" -y
 
   sed -i 's/BIG-REQUESTS/_IG-REQUESTS/' /usr/lib/aarch64-linux-gnu/libxcb.so.1 # tricky
-  mv /usr/share/code/code /usr/share/code.real
+  mv /usr/share/code/code /usr/share/code/code.real
   cat>/usr/share/code/code<<EOF
 #!/usr/bin/env sh
-/usr/share/code.real --no-sandbox "$@"
+/usr/share/code/code.real --no-sandbox "$@"
 EOF
   #Another tricky
-
+  chmod +x /usr/share/code/code
   apt autoremove -y
 
 }
@@ -43,16 +38,6 @@ addUser() {
   echo "user ALL=(ALL:ALL) ALL" >> /etc/sudoers
   adduser --disabled-password --gecos "" user
 }
-# TODO: Support sound transfer
-#sound() {
-#  echo -e "\n${R} [${W}-${R}]${C} Fixing Sound Problem...""${W}"
-#  if [[ ! -e "$HOME/.bashrc" ]]; then
-#    touch "$HOME"/.bashrc
-#  fi
-#
-#  echo "pulseaudio --start --exit-idle-time=-1" >>"$HOME"/.bashrc
-#  echo "pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" >>"$HOME"/.bashrc
-#}
 package2
 installCode
 addUser

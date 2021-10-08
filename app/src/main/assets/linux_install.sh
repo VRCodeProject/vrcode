@@ -28,7 +28,7 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[1;37m')"
 
 banner() {
-#  clear
+  #  clear
   printf "\033[32mA modded gui version of ubuntu for Termux\033[0m\n"
 }
 
@@ -75,8 +75,6 @@ distro() {
   fi
 }
 
-
-
 permission() {
   banner
   echo -e "${R} [${W}-${R}]${C} Setting up Environment...""${W}"
@@ -96,19 +94,29 @@ permission() {
 login() {
   banner
   echo -e "${W}"
-#  echo "$user ALL=(ALL:ALL) ALL" >>/etc/sudoers
-#  adduser $user
   echo "proot-distro login --shared-tmp --fix-low-ports ubuntu" >"$PREFIX"/bin/ubuntu
   chmod +x "$PREFIX"/bin/ubuntu
 }
+fixSound() {
+  echo -e "\n${R} [${W}-${R}]${C} Fixing Sound Problem...""${W}"
+  if [[ ! -e "$HOME/.bashrc" ]]; then
+    touch "$HOME"/.bashrc
+  fi
 
+  if grep -Fxq "pulseaudio --start --exit-idle-time=-1" "$HOME"/.bashrc; then
+    return
+  fi
 
+  echo "pulseaudio --start --exit-idle-time=-1" >>"$HOME"/.bashrc
+  echo "pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" >>"$HOME"/.bashrc
+}
 
 banner
 package
 distro
 permission
 login
+fixSound
 uname -a
 proot-distro login --shared-tmp ubuntu -- bash /tmp/SCRIPT_PLACEHOLDER
 # This works as a trick, SCRIPT_PLACEHOLEDER will be replaced at runtime.

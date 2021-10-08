@@ -1,39 +1,26 @@
 package top.vrcode.app.errView
 
-import android.annotation.SuppressLint
-import android.app.DownloadManager
 import android.app.ProgressDialog
-import android.content.Context
-import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.FileProvider
 import com.termux.shared.termux.TermuxUtils
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okio.buffer
+import okio.sink
 import top.vrcode.app.Constant
 import top.vrcode.app.R
-import java.io.File
-import java.io.IOException
-import android.content.Intent
-import android.database.Cursor
-import androidx.core.content.FileProvider
-import android.widget.Toast
-import android.content.BroadcastReceiver
-import android.content.IntentFilter
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import top.vrcode.app.utils.Utils
 import top.vrcode.app.utils.Utils.setPermission
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
-
-import androidx.annotation.NonNull
-import okhttp3.*
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okio.*
-import java.lang.Exception
+import java.io.File
+import java.io.IOException
 import kotlin.concurrent.thread
 
 
@@ -82,81 +69,7 @@ class TermuxNotEnableActivity : AppCompatActivity() {
 //        applicationContext.unregisterReceiver(downloadReceiver)
     }
 
-//    private val downloadReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-//        override fun onReceive(context: Context, intent: Intent) {
-//            checkStatus()
-//        }
-//    }
-//
-//    @SuppressLint("Range")
-//    private fun checkStatus() {
-//        Log.d("CheckStatus", "Being Notified")
-//        val query = DownloadManager.Query()
-//        query.setFilterById(downloadId!!)
-//        val cursor: Cursor = downloadManager!!.query(query)
-//        if (cursor.moveToFirst()) {
-//            when (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
-//                DownloadManager.STATUS_PAUSED -> {
-//                }
-//                DownloadManager.STATUS_PENDING -> {
-//                }
-//                DownloadManager.STATUS_RUNNING -> {
-//                    val soFarSize: Long =
-//                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-//                    val totalSize: Long =
-//                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-//                    val downloadProgress = (soFarSize * 1.0f / totalSize * 100).toInt()
-//                    Log.d("Running Report", "Report $downloadProgress")
-//                    progressDialog!!.progress = downloadProgress
-//                }
-//                DownloadManager.STATUS_SUCCESSFUL -> {
-//                    mFuture?.run {
-//                        if (!isCancelled) cancel(true)
-//                    }
-//                    progressDialog!!.dismiss()
-//                    cursor.close()
-//                    Handler(Looper.getMainLooper()).postDelayed(
-//                        { installApk() }, 500)
-//
-//                }
-//                DownloadManager.STATUS_FAILED -> {
-//                    mFuture?.run {
-//                        if (!isCancelled) cancel(true)
-//                    }
-//                    progressDialog!!.dismiss()
-//                    cursor.close()
-//                    Toast.makeText(
-//                        applicationContext,
-//                        getString(R.string.download_failed),
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//
-//                }
-//            }
-//        }
-//    }
 
-    //    private fun download(url: String, destFile: File) {
-//        val request: Request = HttpUrl.Builder().url(url).build()
-//        val response: Response = okHttpClient.newCall(request).execute()
-//        val body = response.body
-//        val contentLength = body!!.contentLength()
-//        val source = body.source()
-//        val sink: BufferedSink = Okio.buffer(Okio.sink(destFile))
-//        val sinkBuffer: Buffer = sink.buffer()
-//        var totalBytesRead: Long = 0
-//        val bufferSize = 8 * 1024
-//        var bytesRead: Long
-//        while (source.read(sinkBuffer, bufferSize.toLong()).also { bytesRead = it } != -1L) {
-//            sink.emit()
-//            totalBytesRead += bytesRead
-//            val progress = (totalBytesRead * 100 / contentLength).toInt()
-//            publishProgress(progress)
-//        }
-//        sink.flush()
-//        sink.close()
-//        source.close()
-//    }
     @Suppress("SameParameterValue")
     private fun download(url: String, file: File) {
         val request = Request.Builder().url(url).build()

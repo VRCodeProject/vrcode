@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         val termuxErr = TermuxUtils.isTermuxAppAccessible(applicationContext)
         if (termuxErr != null) {
+            Log.d("TermuxCheck", termuxErr)
             val intent = Intent(this, TermuxNotEnableActivity::class.java)
             startActivity(intent)
             finish()
@@ -93,8 +94,8 @@ class MainActivity : AppCompatActivity() {
             kbd = findViewById(R.id.additionalKbd)
             frm = findViewById(R.id.frame)
 
-//            window.decorView.pointerIcon =
-//                PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
+            window.decorView.pointerIcon =
+                PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
 
 //            Handler(Looper.getMainLooper()).postDelayed({
 //                val scriptString =
