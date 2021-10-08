@@ -35,7 +35,7 @@ EOF
 }
 
 addUser() {
-  echo "user ALL=(ALL:ALL) ALL" >> /etc/sudoers
+  echo "user ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
   adduser --disabled-password --gecos "" user
 }
 package2

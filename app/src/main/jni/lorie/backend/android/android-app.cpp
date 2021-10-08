@@ -282,20 +282,20 @@ JNI_DECLARE(LorieService, keyboardKey)(JNIEnv *env, jobject __unused instance,
 	if (jcompositor == 0) return;
     LorieBackendAndroid *b = fromLong(jcompositor);
 
-    char *characters = NULL;
+    char *characters = nullptr;
 
 	int event_code = 0;
     int shift = jshift;
-	if (characters_ != NULL) characters = (char*) env->GetStringUTFChars(characters_, 0);
+	if (characters_ != nullptr) characters = (char*) env->GetStringUTFChars(characters_, 0); // NOLINT(modernize-use-nullptr)
     if (key_code && !characters) {
 		android_keycode_get_eventcode(key_code, &event_code, &shift);
 		LOGE("kc: %d ec: %d", key_code, event_code);
-		if (strcmp(b->xkb_names.layout, "us") && event_code != 0) {
+		if (strcmp(b->xkb_names.layout, "us") == 0 && event_code != 0) {
 			b->queue.call(&LorieBackendAndroid::layout_change_callback, b, (char*)"us");
 		}
     }
     if (!key_code && characters) {
-        char *layout = NULL;
+        char *layout = nullptr;
         get_character_data(&layout, &shift, &event_code, characters);
         if (layout && b->xkb_names.layout != layout) {
 			b->queue.call(&LorieBackendAndroid::layout_change_callback, b, layout);

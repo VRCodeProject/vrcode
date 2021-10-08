@@ -1,6 +1,7 @@
 package top.vrcode.app.errView
 
 import android.app.ProgressDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -27,11 +28,17 @@ import kotlin.concurrent.thread
 class TermuxNotEnableActivity : AppCompatActivity() {
 
     private var progressDialog: ProgressDialog? = null
+    var mContext: Context? = null
+    var apkFile: File? = null
+    var mDownloadFlag = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_termux_not_enable)
+        mContext = this
+        apkFile =
+            File(applicationContext.externalCacheDir, Constant.LATEST_MODIFIED_TERMUX_APP_FILENAME)
 
         val installBtn = findViewById<AppCompatButton>(R.id.install_termux)
         val goMainBtn = findViewById<AppCompatButton>(R.id.termux_install2main)
@@ -110,7 +117,8 @@ class TermuxNotEnableActivity : AppCompatActivity() {
                 progressDialog!!.dismiss()
                 Log.d("Test", "${file.length()}:${contentLength}")
                 if (file.length() == contentLength) {
-                    installApk(file)
+                    mDownloadFlag = true
+                    installApk(apkFile!!)
                 } else {
                     e.printStackTrace()
                     Toast.makeText(this, getString(R.string.download_failed), Toast.LENGTH_LONG)
@@ -132,27 +140,28 @@ class TermuxNotEnableActivity : AppCompatActivity() {
 
     private fun installTermuxFromNetwork() {
         val uri = Constant.LATEST_MODIFIED_TERMUX_APP_URL
-        val file =
-            File(applicationContext.externalCacheDir, Constant.LATEST_MODIFIED_TERMUX_APP_FILENAME)
 
-        if (file.exists()) {
-            file.delete()
+        if (mDownloadFlag) {
+            installApk(apkFile!!)
+            return
+        }
+
+        if (apkFile!!.exists()) {
+            apkFile!!.delete()
         } // prevent duplicate download
 
         thread {
-            download(uri, file)
+            download(uri, apkFile!!)
         }
     }
-
 
     private fun installApk(file: File) {
         setPermission(file.absolutePath)
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         val apkUri =
             FileProvider.getUriForFile(this, Constant.VRCODE_FILE_PROVIDER_AUTHORITIES, file)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
-        applicationContext.startActivity(intent)
+        mContext!!.startActivity(intent)
     }
 }

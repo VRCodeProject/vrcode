@@ -25,6 +25,7 @@ import com.termux.shared.terminal.TermuxTerminalSessionClientBase
 import com.termux.terminal.TerminalSession
 import top.vrcode.app.TouchParser.OnTouchParseListener
 import top.vrcode.app.utils.Utils
+import kotlin.math.roundToInt
 
 @SuppressLint("ClickableViewAccessibility", "StaticFieldLeak")
 class LorieService : Service() {
@@ -202,7 +203,7 @@ class LorieService : Service() {
     }
 
     private class ServiceEventListener : SurfaceHolder.Callback, OnTouchListener,
-        View.OnKeyListener, OnHoverListener, OnGenericMotionListener, OnTouchParseListener {
+        OnKeyListener, OnHoverListener, OnGenericMotionListener, OnTouchParseListener {
         var svc: LorieService? = null
 
         @SuppressLint("WrongConstant")
@@ -281,7 +282,7 @@ class LorieService : Service() {
                     )
                     rightPressed = e.action == KeyEvent.ACTION_DOWN
                 } else if (e.action == KeyEvent.ACTION_UP) {
-                    if (act!!.kbd != null) act!!.kbd!!.requestFocus()
+//                    if (act!!.kbd != null) act!!.kbd!!.requestFocus()
                     KeyboardUtils.toggleKeyboardVisibility(act!!)
                 }
                 return true
@@ -301,7 +302,11 @@ class LorieService : Service() {
             }
             if (e.action == KeyEvent.ACTION_DOWN) action = TouchParser.ACTION_DOWN
             if (e.action == KeyEvent.ACTION_UP) action = TouchParser.ACTION_UP
-            if (e.characters == null) return false
+//            if (e.characters == null) {
+//
+//                Log.d("KeyDown", "Char not found")
+//                return false
+//            }
             svc!!.keyboardKey(action, keyCode, if (e.isShiftPressed) 1 else 0, e.characters)
             return true
         }
@@ -312,11 +317,11 @@ class LorieService : Service() {
             val mmHeight: Int
             act!!.windowManager.defaultDisplay.getMetrics(dm)
             if (act!!.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                mmWidth = Math.round(width * 25.4 / dm.xdpi).toInt()
-                mmHeight = Math.round(height * 25.4 / dm.ydpi).toInt()
+                mmWidth = (width * 25.4 / dm.xdpi).roundToInt()
+                mmHeight = (height * 25.4 / dm.ydpi).roundToInt()
             } else {
-                mmWidth = Math.round(width * 25.4 / dm.ydpi).toInt()
-                mmHeight = Math.round(height * 25.4 / dm.xdpi).toInt()
+                mmWidth = (width * 25.4 / dm.ydpi).roundToInt()
+                mmHeight = (height * 25.4 / dm.xdpi).roundToInt()
             }
             svc!!.windowChanged(holder.surface, width, height, mmWidth, mmHeight)
         }
@@ -369,7 +374,7 @@ class LorieService : Service() {
     }
 
     private external fun pointerButton(compositor: Long, button: Int, type: Int)
-    private fun keyboardKey(key: Int, type: Int, shift: Int, characters: String) {
+    private fun keyboardKey(key: Int, type: Int, shift: Int, characters: String?) {
         keyboardKey(compositor, key, type, shift, characters)
     }
 
@@ -378,7 +383,7 @@ class LorieService : Service() {
         key: Int,
         type: Int,
         shift: Int,
-        characters: String
+        characters: String?
     )
 
     private external fun createLorieThread(CustXdgpath: String?): Long
@@ -432,7 +437,7 @@ class LorieService : Service() {
             return instance
         }
 
-        val onKeyListener: View.OnKeyListener
+        val onKeyListener: OnKeyListener
             get() = listener
 
         fun sleep(millis: Long) {

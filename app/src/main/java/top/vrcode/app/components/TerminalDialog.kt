@@ -193,7 +193,7 @@ class WindowTerminalView(val context: Context) {
         private set
 
     init {
-        terminalView.setTextSize(40)
+        terminalView.setTextSize(15)
         terminalView.setTypeface(Typeface.MONOSPACE)
     }
 

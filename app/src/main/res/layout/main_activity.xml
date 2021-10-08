@@ -17,15 +17,15 @@
 
     </FrameLayout>
 
-        <top.vrcode.app.AdditionalKeyboardView
-            android:id="@+id/additionalKbd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-    	android:layout_gravity="bottom|center" />
+<!--        <top.vrcode.app.AdditionalKeyboardView-->
+<!--            android:id="@+id/additionalKbd"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--    	android:layout_gravity="bottom|center" />-->
 
-        <!-- Without this view AdditionalKeyboard view sometimes dissapear -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-    	android:layout_gravity="bottom|center"/>
+<!--        &lt;!&ndash; Without this view AdditionalKeyboard view sometimes dissapear &ndash;&gt;-->
+<!--        <View-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--    	android:layout_gravity="bottom|center"/>-->
 </FrameLayout>

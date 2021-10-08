@@ -1,18 +1,15 @@
 package top.vrcode.app
 
+import android.annotation.SuppressLint
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
-import android.widget.FrameLayout
-import android.os.Bundle
 import android.content.res.Configuration
-import android.os.Handler
-import android.os.Looper
+import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
 import com.termux.shared.termux.TermuxUtils
 import top.vrcode.app.components.TerminalDialog
 import top.vrcode.app.errView.AddGraphicalSupportActivity
@@ -20,8 +17,8 @@ import top.vrcode.app.errView.TermuxNotEnableActivity
 import top.vrcode.app.utils.Utils
 
 class MainActivity : AppCompatActivity() {
-    @JvmField
-    var kbd: AdditionalKeyboardView? = null
+    //    @JvmField
+//    var kbd: AdditionalKeyboardView? = null
     private var frm: FrameLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +88,7 @@ class MainActivity : AppCompatActivity() {
             requestWindowFeature(Window.FEATURE_NO_TITLE)
             setContentView(R.layout.main_activity)
 
-            kbd = findViewById(R.id.additionalKbd)
+//            kbd = findViewById(R.id.additionalKbd)
             frm = findViewById(R.id.frame)
 
             window.decorView.pointerIcon =
@@ -120,7 +117,7 @@ class MainActivity : AppCompatActivity() {
     var orientation = 0
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        if (newConfig.orientation != orientation && kbd != null && kbd!!.visibility == View.VISIBLE) {
+        if (newConfig.orientation != orientation /*&& kbd != null && kbd!!.visibility == View.VISIBLE*/) {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             var view = currentFocus
             if (view == null) {
@@ -134,7 +131,7 @@ class MainActivity : AppCompatActivity() {
     fun onLorieServiceStart(instance: LorieService) {
         val lorieView = findViewById<SurfaceView>(R.id.lorieView)
         instance.setListeners(lorieView)
-        kbd?.reload(keys, lorieView, LorieService.onKeyListener)
+//        kbd?.reload(keys, lorieView, LorieService.onKeyListener)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -153,6 +150,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {}
+
+    @SuppressLint("UnspecifiedImmutableFlag")
+    override fun onDestroy() {
+        super.onDestroy()
+        val exitIntent = Intent(applicationContext, LorieService::class.java)
+        exitIntent.action = LorieService.ACTION_STOP_SERVICE
+        startService(exitIntent)
+    }
 //    public override fun onUserLeaveHint() {
 //        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
 //        if (preferences.getBoolean("PIP", true)) {
@@ -160,36 +165,36 @@ class MainActivity : AppCompatActivity() {
 //        }
 //    }
 
-    override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean,
-        newConfig: Configuration
-    ) {
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        if (kbd!!.visibility != View.VISIBLE) if (preferences.getBoolean(
-                "showAdditionalKbd",
-                true
-            )
-        ) {
-            kbd!!.visibility = View.VISIBLE
-            val paddingDp = 35
-            val density = this.resources.displayMetrics.density
-            val paddingPixel = (paddingDp * density).toInt()
-            frm!!.setPadding(0, 0, 0, paddingPixel)
-        }
-        return
+//    override fun onPictureInPictureModeChanged(
+//        isInPictureInPictureMode: Boolean,
+//        newConfig: Configuration
+//    ) {
+//        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+//        if (kbd!!.visibility != View.VISIBLE) if (preferences.getBoolean(
+//                "showAdditionalKbd",
+//                true
+//            )
+//        ) {
+//            kbd!!.visibility = View.VISIBLE
+//            val paddingDp = 35
+//            val density = this.resources.displayMetrics.density
+//            val paddingPixel = (paddingDp * density).toInt()
+//            frm!!.setPadding(0, 0, 0, paddingPixel)
+//        }
+//        return
+//
+//    }
 
-    }
-
-    companion object {
-        private val keys = intArrayOf(
-            KeyEvent.KEYCODE_ESCAPE,
-            KeyEvent.KEYCODE_TAB,
-            KeyEvent.KEYCODE_CTRL_LEFT,
-            KeyEvent.KEYCODE_ALT_LEFT,
-            KeyEvent.KEYCODE_DPAD_UP,
-            KeyEvent.KEYCODE_DPAD_DOWN,
-            KeyEvent.KEYCODE_DPAD_LEFT,
-            KeyEvent.KEYCODE_DPAD_RIGHT
-        )
-    }
+//    companion object {
+//        private val keys = intArrayOf(
+//            KeyEvent.KEYCODE_ESCAPE,
+//            KeyEvent.KEYCODE_TAB,
+//            KeyEvent.KEYCODE_CTRL_LEFT,
+//            KeyEvent.KEYCODE_ALT_LEFT,
+//            KeyEvent.KEYCODE_DPAD_UP,
+//            KeyEvent.KEYCODE_DPAD_DOWN,
+//            KeyEvent.KEYCODE_DPAD_LEFT,
+//            KeyEvent.KEYCODE_DPAD_RIGHT
+//        )
+//    }
 }
