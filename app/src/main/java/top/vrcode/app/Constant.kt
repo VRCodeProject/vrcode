@@ -4,13 +4,11 @@ import com.termux.shared.termux.TermuxConstants
 import java.io.File
 
 object Constant {
-    const val LATEST_MODIFIED_TERMUX_APP_URL =
-        "https://github.com/VRCodeProject/termux-app/releases/download/20210922T145352/termux-app-arm64-v8a-release.apk" // FIXME: should update automatically
-    const val LATEST_MODIFIED_TERMUX_APP_FILENAME = "termux-app-arm64-v8a-release.apk"
+    const val TERMUX_PLUGIN_FILENAME = "plugin.apk"
+    const val TERMUX_BOOTSTRAP_FILENAME = "bootstrap-aarch64.zip"
 
     const val VRCODE_FILE_PROVIDER_AUTHORITIES = "top.vrcode.app.fileprovider"
 
-    const val VRCODE_INITED_KEY = "inited"
     val VRCODE_INIT_FILE = File("${TermuxConstants.TERMUX_ETC_PREFIX_DIR_PATH}/vrcode.inited")
 
     const val X11_INSTALL_SCRIPT =

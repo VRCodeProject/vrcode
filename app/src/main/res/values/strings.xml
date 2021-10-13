@@ -1,11 +1,12 @@
 <resources>
     <string name="app_name">VR Code</string>
+
     <string name="install_termux_tip">You should first install Termux</string>
-    <string name="install_termux_reason">VR Code relies on the runtime environment provided by Termux. You should install Termux first.\nVR Code relies on a modified version of Termux and therefore will not fit with the official version.You can download it with the button below.\nThe modified source code can be found at VRCodeProject@GitHub.\n\nAfter installation, you should open it once to install bootstrap</string>
-    <string name="install_termux_btn">Install Termux Online</string>
-    <string name="install_official_termux">You should install modified version of Termux</string>
-    <string name="download_failed">Failed to download Termux.</string>
-    <string name="downloading_termux">Downloading Termux</string>
+    <string name="install_termux_reason">VR Code relies on the package eco-system provided by Termux. You should install an empty package.\nThe source code of fake termux can be found at VRCodeProject@GitHub.\n</string>
+    <string name="install_termux_btn">Install Fake Termux</string>
+    <string name="install_official_termux">You should install fake version Termux.</string>
+    <!--    <string name="download_failed">Failed to download Termux.</string>-->
+    <!--    <string name="downloading_termux">Downloading Termux</string>-->
     <string name="have_installed_termux">Have installed</string>
 
     <string name="confirm">Confirm</string>
@@ -27,4 +28,13 @@
 
     <string name="desktop_notification_name">Desktop Service</string>
     <string name="desktop_notification_content">Desktop Service is running</string>
+
+    <string name="bootstrap_installer_body">Installing bootstrap packages…</string>
+    <string name="bootstrap_error_title">Unable to install bootstrap</string>
+    <string name="bootstrap_error_body">VR Code was unable to install the bootstrap packages.</string>
+    <string name="bootstrap_error_abort">Abort</string>
+    <string name="bootstrap_error_try_again">Try again</string>
+    <string name="bootstrap_error_not_primary_user_message">VR Code can only be run as the primary user.
+        \nBootstrap binaries compiled for VR Code have hardcoded $PREFIX path and cannot be installed
+        under any path other than %1$s.</string>
 </resources>

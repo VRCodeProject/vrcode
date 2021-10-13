@@ -28,14 +28,12 @@ class MainActivity : AppCompatActivity() {
             Log.d("TermuxCheck", termuxErr)
             val intent = Intent(this, TermuxNotEnableActivity::class.java)
             startActivity(intent)
-            finish()
             return
         }
 
         if (!Utils.checkGraphicalSupport()) {
             val intent = Intent(this, AddGraphicalSupportActivity::class.java)
             startActivity(intent)
-            finish()
             return
         }
 

@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="top.vrcode.app"
     android:installLocation="internalOnly"
-    android:sharedUserId="top.vrcode"
-    android:sharedUserLabel="top.vrcode user">
+    android:sharedUserId="top.vrcode">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER" />
@@ -49,14 +48,14 @@
 
     <application
         android:allowBackup="false"
+        android:banner="@mipmap/ic_launcher"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_cfg"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning"
-        android:banner="@mipmap/ic_launcher">
+        tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".errView.AddGraphicalSupportActivity"
             android:exported="true" />

@@ -22,6 +22,7 @@ import androidx.core.app.NotificationCompat
 import com.termux.shared.shell.TermuxSession
 import com.termux.shared.shell.TermuxShellEnvironmentClient
 import com.termux.shared.terminal.TermuxTerminalSessionClientBase
+import com.termux.shared.termux.TermuxUtils
 import com.termux.terminal.TerminalSession
 import top.vrcode.app.TouchParser.OnTouchParseListener
 import top.vrcode.app.utils.Utils
@@ -165,7 +166,7 @@ class LorieService : Service() {
             Log.e("LorieService", action)
             terminate()
             sleep(500)
-            act!!.finish()
+            act?.finish()
             stopSelf()
             System.exit(0) // This is needed to completely finish the process
         }
