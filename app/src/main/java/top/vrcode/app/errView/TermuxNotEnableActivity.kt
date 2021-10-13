@@ -3,6 +3,7 @@ package top.vrcode.app.errView
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatTextView
@@ -46,8 +47,12 @@ class TermuxNotEnableActivity : AppCompatActivity() {
         }
 
         goMainBtn.setOnClickListener {
-            if (TermuxUtils.isTermuxAppAccessible(applicationContext) == null) {
+            if (TermuxUtils.isTermuxAppInstalled(applicationContext) == null &&
+                TermuxUtils.getTermuxPackageContext(this) != null
+            ) {
                 TermuxInstaller.setupBootstrapIfNeeded(this) { Utils.reborn(application) }
+            } else {
+                Toast.makeText(this, "com.termux not accessible.", Toast.LENGTH_SHORT).show()
             }
 
         }
