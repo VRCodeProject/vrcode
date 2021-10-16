@@ -50,7 +50,11 @@ class TermuxNotEnableActivity : AppCompatActivity() {
             if (TermuxUtils.isTermuxAppInstalled(applicationContext) == null &&
                 TermuxUtils.getTermuxPackageContext(this) != null
             ) {
+                val context = TermuxUtils.getTermuxPackageContext(this)
+                context.filesDir.mkdir()
+
                 TermuxInstaller.setupBootstrapIfNeeded(this) { Utils.reborn(application) }
+
             } else {
                 Toast.makeText(this, "com.termux not accessible.", Toast.LENGTH_SHORT).show()
             }

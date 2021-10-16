@@ -17,80 +17,26 @@ import top.vrcode.app.errView.TermuxNotEnableActivity
 import top.vrcode.app.utils.Utils
 
 class MainActivity : AppCompatActivity() {
-    //    @JvmField
-//    var kbd: AdditionalKeyboardView? = null
+
     private var frm: FrameLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val termuxErr = TermuxUtils.isTermuxAppAccessible(applicationContext)
-        if (termuxErr != null) {
-            Log.d("TermuxCheck", termuxErr)
-            val intent = Intent(this, TermuxNotEnableActivity::class.java)
-            startActivity(intent)
-            return
-        }
-
-        if (!Utils.checkGraphicalSupport()) {
-            val intent = Intent(this, AddGraphicalSupportActivity::class.java)
-            startActivity(intent)
-            return
-        }
-
-        val inited = Constant.VRCODE_INIT_FILE.exists()
-
-        if (!inited) {
-            setContentView(R.layout.main_activity)
-
-            fun setInited() {
-                Constant.VRCODE_INIT_FILE.writeText("true")
-            }
-
-            fun setupLinux() {
-                var installScriptString =
-                    Utils.getAssetScript(Constant.LINUX_ENV_INSTALL_SCRIPT, application)
-                val internalInstallScriptString =
-                    Utils.getAssetScript(Constant.LINUX_ENV_INTERNAL_INSTALL_SCRIPT, application)
-
-                val internalInstallScript = Utils.BashScript(internalInstallScriptString)
-                installScriptString = installScriptString.replace(
-                    Constant.LINUX_INSTALL_SCRIPT_INTERNAL_SCRIPT_PLACEHOLDER,
-                    internalInstallScript.plainFilename
-                )
-                val installScript = Utils.BashScript(installScriptString)
-                TerminalDialog(this)
-                    .execute(
-                        installScript.get()
-                    ).setPositiveButtonCallback { terminalDialog, terminalSession ->
-                        run {
-                            Log.d("TerminalCheck", terminalSession?.isRunning.toString())
-                            if ((terminalSession?.isRunning != true)) {
-                                terminalDialog.dismiss()
-                                setInited()
-                                finish()
-                                Utils.reborn(application)
-                            }
-                        }
-                    }.show(getString(R.string.install_linux_dialog_title))
-            }
-
-            setupLinux()
-        } else {
-            LorieService.setMainActivity(this)
-            LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
-            window.setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or
-                        WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
-            )
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            requestWindowFeature(Window.FEATURE_NO_TITLE)
-            setContentView(R.layout.main_activity)
+        LorieService.setMainActivity(this)
+        LorieService.start(LorieService.ACTION_START_FROM_ACTIVITY)
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+        )
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        setContentView(R.layout.main_activity)
 
 //            kbd = findViewById(R.id.additionalKbd)
-            frm = findViewById(R.id.frame)
+        frm = findViewById(R.id.frame)
 
-            window.decorView.pointerIcon =
-                PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
+        window.decorView.pointerIcon =
+            PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL)
 
 //            Handler(Looper.getMainLooper()).postDelayed({
 //                val scriptString =
@@ -109,8 +55,9 @@ class MainActivity : AppCompatActivity() {
 //                        }
 //                    }.show("Test Service")
 //            }, 1000)
-        }
+
     }
+
 
     var orientation = 0
     override fun onConfigurationChanged(newConfig: Configuration) {

@@ -100,6 +100,10 @@ class LorieService : Service() {
             startActivity(whitelist)
         }
 
+        if (!Utils.checkGraphicalSupport()) {
+            return
+        }
+
         // Setup Desktop Environment
         val scriptString = Utils.getAssetScript(Constant.LINUX_ENV_STARTUP_SCRIPT, application)
         val bashScript = Utils.BashScript(scriptString, true)

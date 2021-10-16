@@ -5,7 +5,7 @@ import java.io.File
 
 object Constant {
     const val TERMUX_PLUGIN_FILENAME = "plugin.apk"
-    const val TERMUX_BOOTSTRAP_FILENAME = "bootstrap-aarch64.zip"
+    const val TERMUX_BOOTSTRAP_FILENAME = "bootstrap-arch64.zip"
 
     const val VRCODE_FILE_PROVIDER_AUTHORITIES = "top.vrcode.app.fileprovider"
 

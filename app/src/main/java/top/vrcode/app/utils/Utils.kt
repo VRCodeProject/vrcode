@@ -84,6 +84,11 @@ object Utils {
             plainFilename = "${md5(s).toHex()}.sh"
             filename = "${TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH}/$plainFilename"
 
+            val tmpDirectory = TermuxConstants.TERMUX_TMP_PREFIX_DIR
+            if (!tmpDirectory.exists()) {
+                tmpDirectory.mkdir()
+            }
+
             file = File(filename)
 
             if (!file.exists()) {
