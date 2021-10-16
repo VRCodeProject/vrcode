@@ -15,11 +15,6 @@ class InitActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_init)
 
-        val context = TermuxUtils.getTermuxPackageContext(this)
-//        if (BuildConfig.DEBUG) {
-//            context.filesDir.deleteRecursively()
-//        }
-
         val termuxErr = TermuxUtils.isTermuxAppAccessible(applicationContext)
         if (termuxErr != null) {
             Log.e("TermuxCheck", termuxErr)
