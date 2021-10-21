@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
+import android.os.Looper
 import com.termux.shared.models.ExecutionCommand
 import com.termux.shared.termux.TermuxConstants
 import java.io.File
@@ -20,7 +21,7 @@ object Utils {
     }
 
     fun reborn(application: Application) {
-        Handler().postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             val launchIntent =
                 application.applicationContext.packageManager.getLaunchIntentForPackage(application.packageName)
             launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

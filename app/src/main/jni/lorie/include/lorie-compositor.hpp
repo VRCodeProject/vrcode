@@ -75,8 +75,8 @@ public:
 private:
 	wl_client_created_listener_t<LorieClient, LorieCompositor&> client_created_listener;
 
-	struct LorieClient* get_toplevel_client();
-	uint32_t next_serial();
+	struct LorieClient* get_toplevel_client() const;
+	uint32_t next_serial() const;
 
 	struct {
 		uint32_t depressed = 0, latched = 0, locked = 0, group = 0;

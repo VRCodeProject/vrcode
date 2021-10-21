@@ -1,11 +1,14 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EmptyDeclOrStmt"
+#pragma ide diagnostic ignored "UnusedLocalVariable"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+
 #include <lorie-compositor.hpp>
 #include <lorie-client.hpp>
 
 #include <LorieImpls.hpp>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #undef LOGV
 #define LOGV(fmt ...)
 
@@ -33,7 +36,7 @@ cursor(renderer.cursor_surface),
 client_created_listener(*this) {}
 
 int proc(int fd, uint32_t mask, void *data) {
-	LorieCompositor *b = static_cast<LorieCompositor*>(data);
+	auto *b = static_cast<LorieCompositor*>(data);
 	if (b == nullptr) {LOGF("b == nullptr"); return 0;}
 
 	b->queue.run();
@@ -204,13 +207,13 @@ void LorieCompositor::real_keyboard_keymap_changed() {
 	client->keyboard.keymap_changed();
 }
 
-LorieClient* LorieCompositor::get_toplevel_client() {
+LorieClient* LorieCompositor::get_toplevel_client() const {
 	if (toplevel != nullptr && toplevel->client != nullptr && *(toplevel->client) != nullptr)
 		return *(toplevel->client);
 	return nullptr;
 }
 
-uint32_t LorieCompositor::next_serial() {
+uint32_t LorieCompositor::next_serial() const {
 	if (display == nullptr) return 0;
 
 	return wl_display_next_serial(display);
