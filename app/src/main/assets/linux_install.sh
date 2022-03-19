@@ -16,7 +16,7 @@
 # limitations under the License.
 
 exit() {
-  echo "Fake exit   in debug"
+  echo "Fake exit in debug"
 }
 
 R="$(printf '\033[1;31m')"

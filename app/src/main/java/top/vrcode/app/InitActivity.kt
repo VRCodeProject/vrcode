@@ -64,8 +64,9 @@ class InitActivity : AppCompatActivity() {
         }
         if (!Constant.VRCODE_INIT_FILE.exists()) {
             setupLinux()
+        } else {
+            startActivity(Intent(this, MainActivity::class.java))
         }
 
-        startActivity(Intent(this, MainActivity::class.java))
     }
 }

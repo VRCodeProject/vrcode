@@ -311,7 +311,7 @@ public class TermuxInstaller {
     }
 
     public static byte[] loadZipBytes(Context context) throws IOException {
-        InputStream inputStream = context.getAssets().open("bootstrap-arch64.zip");
+        InputStream inputStream = context.getAssets().open("bootstrap-aarch64.zip");
 
         byte[] buffer = new byte[8192];
         int bytesRead;

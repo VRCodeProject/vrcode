@@ -32,7 +32,6 @@ class MainActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.main_activity)
 
-//            kbd = findViewById(R.id.additionalKbd)
         frm = findViewById(R.id.frame)
 
         window.decorView.pointerIcon =
@@ -103,43 +102,4 @@ class MainActivity : AppCompatActivity() {
         exitIntent.action = LorieService.ACTION_STOP_SERVICE
         startService(exitIntent)
     }
-//    public override fun onUserLeaveHint() {
-//        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-//        if (preferences.getBoolean("PIP", true)) {
-//            enterPictureInPictureMode()
-//        }
-//    }
-
-//    override fun onPictureInPictureModeChanged(
-//        isInPictureInPictureMode: Boolean,
-//        newConfig: Configuration
-//    ) {
-//        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-//        if (kbd!!.visibility != View.VISIBLE) if (preferences.getBoolean(
-//                "showAdditionalKbd",
-//                true
-//            )
-//        ) {
-//            kbd!!.visibility = View.VISIBLE
-//            val paddingDp = 35
-//            val density = this.resources.displayMetrics.density
-//            val paddingPixel = (paddingDp * density).toInt()
-//            frm!!.setPadding(0, 0, 0, paddingPixel)
-//        }
-//        return
-//
-//    }
-
-//    companion object {
-//        private val keys = intArrayOf(
-//            KeyEvent.KEYCODE_ESCAPE,
-//            KeyEvent.KEYCODE_TAB,
-//            KeyEvent.KEYCODE_CTRL_LEFT,
-//            KeyEvent.KEYCODE_ALT_LEFT,
-//            KeyEvent.KEYCODE_DPAD_UP,
-//            KeyEvent.KEYCODE_DPAD_DOWN,
-//            KeyEvent.KEYCODE_DPAD_LEFT,
-//            KeyEvent.KEYCODE_DPAD_RIGHT
-//        )
-//    }
 }
